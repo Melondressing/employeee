@@ -52,7 +52,7 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
   }
 
   Future<void> remove(WorkEntry entry) async {
-    state = state.where((e) => e != entry).toList();
+    state = state.where((e) => !_sameEntry(e, entry)).toList();
     await Storage.saveEntries(state);
   }
 
@@ -81,6 +81,17 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
         .toList();
     state = [...state, ...copied];
     await Storage.saveEntries(state);
+  }
+
+  bool _sameEntry(WorkEntry a, WorkEntry b) {
+    return a.date == b.date &&
+        a.start == b.start &&
+        a.end == b.end &&
+        a.breakMinutes == b.breakMinutes &&
+        a.type == b.type &&
+        a.note == b.note &&
+        a.isNight == b.isNight &&
+        a.leaveHoursUsed == b.leaveHoursUsed;
   }
 }
 

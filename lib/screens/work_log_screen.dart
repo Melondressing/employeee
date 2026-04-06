@@ -119,18 +119,56 @@ class WorkLogScreen extends ConsumerWidget {
                                   color: AppColors.deepInk,
                                   fontWeight: FontWeight.w700),
                             ),
-                            subtitle: Text(
-                              '시간 ${e.paidHours.toStringAsFixed(2)}h | ${_h(e.start)} ~ ${_h(e.end)} | 휴게 ${e.breakMinutes}분',
-                              style:
-                                  const TextStyle(color: AppColors.softBlack),
-                            ),
-                            trailing: e.note.isEmpty
-                                ? null
-                                : Text(
-                                    e.note,
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '시간 ${e.paidHours.toStringAsFixed(2)}h | ${_h(e.start)} ~ ${_h(e.end)} | 휴게 ${e.breakMinutes}분',
+                                  style: const TextStyle(
+                                      color: AppColors.softBlack),
+                                ),
+                                if (e.note.isNotEmpty)
+                                  Text(
+                                    '메모: ${e.note}',
                                     style: const TextStyle(
                                         color: AppColors.deepInk),
                                   ),
+                              ],
+                            ),
+                            trailing: IconButton(
+                              tooltip: '삭제',
+                              icon: const Icon(Icons.delete_outline),
+                              onPressed: () async {
+                                final confirmed = await showDialog<bool>(
+                                  context: context,
+                                  builder: (dialogContext) => AlertDialog(
+                                    title: const Text('기록 삭제'),
+                                    content: const Text('이 근무 기록을 삭제할까요?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(dialogContext, false),
+                                        child: const Text('취소'),
+                                      ),
+                                      FilledButton(
+                                        onPressed: () =>
+                                            Navigator.pop(dialogContext, true),
+                                        child: const Text('삭제'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (confirmed != true) return;
+                                await ref
+                                    .read(workEntriesProvider.notifier)
+                                    .remove(e);
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('근무 기록을 삭제했어요.')),
+                                );
+                              },
+                            ),
                           );
                         },
                       ),
