@@ -97,7 +97,7 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _currencyGrid(),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Text(
                       '선택: $_currency · $_country',
                       style: const TextStyle(
@@ -162,7 +162,7 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
                         _chipButton('30', () => _payCycleLength.text = '30'),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     DropdownButtonFormField<int>(
                       initialValue: _periodStartWeekday,
                       dropdownColor: AppColors.cardSurfaceStrong,
@@ -173,7 +173,7 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
                       onChanged: (v) => setState(
                           () => _periodStartWeekday = v ?? DateTime.monday),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     DropdownButtonFormField<int>(
                       initialValue: _paydayWeekday,
                       dropdownColor: AppColors.cardSurfaceStrong,
@@ -221,9 +221,9 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
 
   Widget _sectionCard({required String title, required Widget child}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 6),
       child: GlassCard(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(9),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -235,7 +235,7 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
                 fontSize: 16,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             child,
           ],
         ),
@@ -261,15 +261,16 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isCompact = constraints.maxWidth < 420;
-        final columns = constraints.maxWidth < 520 ? 3 : 4;
+        final isWide = constraints.maxWidth >= 520;
+        final columns = isWide ? 4 : 3;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columns,
-            mainAxisSpacing: isCompact ? 3 : 4,
-            crossAxisSpacing: isCompact ? 3 : 4,
-            childAspectRatio: isCompact ? 1.18 : 1.42,
+            mainAxisSpacing: isCompact ? 2 : 3,
+            crossAxisSpacing: isCompact ? 2 : 3,
+            childAspectRatio: isCompact ? 1.34 : 1.62,
           ),
           itemCount: items.length,
           itemBuilder: (context, index) {
@@ -292,8 +293,8 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
               },
               child: Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: isCompact ? 8 : 10,
-                  vertical: isCompact ? 6 : 8,
+                  horizontal: isCompact ? 7 : 9,
+                  vertical: isCompact ? 5 : 6,
                 ),
                 decoration: BoxDecoration(
                   gradient: selected
@@ -399,7 +400,7 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(9),
       decoration: BoxDecoration(
         color: AppColors.cardSurfaceAlt,
         borderRadius: BorderRadius.circular(12),
