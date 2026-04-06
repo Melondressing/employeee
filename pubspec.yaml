@@ -1,0 +1,24 @@
+name: employeeee
+description: Worker wage companion app with calculators, reverse wage lookup, and pay verification.
+version: 0.1.0
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.6.1
+  intl: ^0.18.1
+  collection: ^1.19.0
+  shared_preferences: ^2.3.2
+  share_plus: ^10.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
