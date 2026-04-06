@@ -260,15 +260,16 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth < 360 ? 2 : 3;
+        final isCompact = constraints.maxWidth < 420;
+        final columns = constraints.maxWidth < 520 ? 3 : 4;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columns,
-            mainAxisSpacing: 4,
-            crossAxisSpacing: 4,
-            childAspectRatio: 1.55,
+            mainAxisSpacing: isCompact ? 3 : 4,
+            crossAxisSpacing: isCompact ? 3 : 4,
+            childAspectRatio: isCompact ? 1.18 : 1.42,
           ),
           itemCount: items.length,
           itemBuilder: (context, index) {
@@ -290,8 +291,10 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
                 });
               },
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isCompact ? 8 : 10,
+                  vertical: isCompact ? 6 : 8,
+                ),
                 decoration: BoxDecoration(
                   gradient: selected
                       ? const LinearGradient(
@@ -313,8 +316,11 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
                 ),
                 child: Row(
                   children: [
-                    Text(item.flag, style: const TextStyle(fontSize: 17)),
-                    const SizedBox(width: 8),
+                    Text(
+                      item.flag,
+                      style: TextStyle(fontSize: isCompact ? 15 : 17),
+                    ),
+                    SizedBox(width: isCompact ? 6 : 8),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -324,18 +330,18 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
                             item.currency,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w700,
                               color: AppColors.deepInk,
-                              fontSize: 12,
+                              fontSize: isCompact ? 11 : 12,
                             ),
                           ),
                           Text(
                             item.country,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 10,
+                            style: TextStyle(
+                              fontSize: isCompact ? 9 : 10,
                               color: AppColors.softBlack,
                             ),
                           ),
