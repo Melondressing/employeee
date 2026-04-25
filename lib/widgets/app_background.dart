@@ -40,18 +40,21 @@ class AppBackground extends StatelessWidget {
   }
 
   Widget _blob(double size, Color color) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-        boxShadow: [
-          BoxShadow(
-              color: color.withValues(alpha: 0.45),
-              blurRadius: 100,
-              spreadRadius: 6),
-        ],
+    return RepaintBoundary(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [
+              color.withValues(alpha: 0.82),
+              color.withValues(alpha: 0.34),
+              color.withValues(alpha: 0.0),
+            ],
+            stops: const [0.0, 0.45, 1.0],
+          ),
+        ),
       ),
     );
   }
