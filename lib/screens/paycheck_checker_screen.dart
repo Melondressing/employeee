@@ -6,6 +6,7 @@ import '../services/providers.dart';
 import '../theme/colors.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/glass_card.dart';
+import '../widgets/period_range_controls.dart';
 import '../widgets/tax_note.dart';
 
 class PaycheckCheckerScreen extends ConsumerStatefulWidget {
@@ -67,8 +68,47 @@ class _PaycheckCheckerScreenState extends ConsumerState<PaycheckCheckerScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _RangeControls(
-                          from: from, to: to, payday: payday, ref: ref),
+                      PeriodRangeControls(
+                        from: from,
+                        to: to,
+                        payday: payday,
+                        paydaySuffix: ' · 기간 내 금액만 비교',
+                        onPrevious: () {
+                          ref.read(customRangeProvider.notifier).state = null;
+                          ref.read(cycleOffsetProvider.notifier).state--;
+                        },
+                        onNext: () {
+                          ref.read(customRangeProvider.notifier).state = null;
+                          ref.read(cycleOffsetProvider.notifier).state++;
+                        },
+                        onCustomRange: () async {
+                          final picked = await showDateRangePicker(
+                            context: context,
+                            firstDate: DateTime.now()
+                                .subtract(const Duration(days: 365)),
+                            lastDate: DateTime.now()
+                                .add(const Duration(days: 365)),
+                            initialDateRange: DateTimeRange(start: from, end: to),
+                          );
+                          if (picked != null) {
+                            ref.read(customRangeProvider.notifier).state = picked;
+                          }
+                        },
+                        onMonth: () {
+                          final now = DateTime.now();
+                          final monthStart = DateTime(now.year, now.month, 1);
+                          final nextMonth = DateTime(now.year, now.month + 1, 1);
+                          final monthEnd =
+                              nextMonth.subtract(const Duration(days: 1));
+                          ref.read(customRangeProvider.notifier).state =
+                              DateTimeRange(start: monthStart, end: monthEnd);
+                        },
+                        monthLabel: '이달 전체(월간) 보기',
+                        onReset: () {
+                          ref.read(customRangeProvider.notifier).state = null;
+                          ref.read(cycleOffsetProvider.notifier).state = 0;
+                        },
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         'Current period: ${DateFormat('yyyy-MM-dd').format(from)} '
@@ -200,95 +240,5 @@ class _PaycheckCheckerScreenState extends ConsumerState<PaycheckCheckerScreen> {
               ),
       ),
     );
-  }
-}
-
-class _RangeControls extends ConsumerWidget {
-  const _RangeControls(
-      {required this.from,
-      required this.to,
-      required this.payday,
-      required this.ref});
-
-  final DateTime from;
-  final DateTime to;
-  final DateTime payday;
-  final WidgetRef ref;
-
-  @override
-  Widget build(BuildContext context, WidgetRef _) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            IconButton(
-              onPressed: () {
-                ref.read(customRangeProvider.notifier).state = null;
-                ref.read(cycleOffsetProvider.notifier).state--;
-              },
-              icon: const Icon(Icons.chevron_left, color: AppColors.deepInk),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    '${_d(from)} ~ ${_d(to)}',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, color: AppColors.deepInk),
-                  ),
-                  Text(
-                    '지급일 ${_d(payday)} (${_weekday(payday)}) · 기간 내 금액만 비교',
-                    style: const TextStyle(
-                        color: AppColors.softBlack, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            IconButton(
-              onPressed: () {
-                ref.read(customRangeProvider.notifier).state = null;
-                ref.read(cycleOffsetProvider.notifier).state++;
-              },
-              icon: const Icon(Icons.chevron_right, color: AppColors.deepInk),
-            ),
-          ],
-        ),
-        Wrap(
-          spacing: 8,
-          children: [
-            TextButton(
-              onPressed: () async {
-                final picked = await showDateRangePicker(
-                  context: context,
-                  firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                  lastDate: DateTime.now().add(const Duration(days: 365)),
-                  initialDateRange: DateTimeRange(start: from, end: to),
-                );
-                if (picked != null) {
-                  ref.read(customRangeProvider.notifier).state = picked;
-                }
-              },
-              child: const Text('사용자 지정'),
-            ),
-            TextButton(
-              onPressed: () {
-                ref.read(customRangeProvider.notifier).state = null;
-                ref.read(cycleOffsetProvider.notifier).state = 0;
-              },
-              child: const Text('현재 주기'),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  String _d(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
-
-  static String _weekday(DateTime d) {
-    const names = ['월', '화', '수', '목', '금', '토', '일'];
-    return names[(d.weekday - 1) % 7];
   }
 }

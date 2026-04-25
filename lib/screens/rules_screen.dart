@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../models/pay_rule.dart';
 import '../services/providers.dart';
+import '../services/storage.dart';
 import '../theme/colors.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/glass_card.dart';
@@ -31,6 +34,7 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
 
   int _periodStartWeekday = DateTime.monday;
   int _paydayWeekday = DateTime.friday;
+  late DateTime _cycleAnchorDate;
   String _country = 'Custom';
   String _taxNote = '';
   String _currency = 'AUD';
@@ -59,6 +63,7 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
         TextEditingController(text: rule.payCycleLengthDays.toString());
     _periodStartWeekday = rule.payPeriodStartWeekday;
     _paydayWeekday = rule.paydayWeekday;
+    _cycleAnchorDate = rule.cycleAnchorDate ?? _defaultCycleAnchor(rule);
     _country = rule.country;
     _taxNote = rule.taxNote;
     _currency = rule.currency;
@@ -184,6 +189,33 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
                       onChanged: (v) =>
                           setState(() => _paydayWeekday = v ?? DateTime.friday),
                     ),
+                    const SizedBox(height: 6),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.deepInk,
+                        side: const BorderSide(color: AppColors.glassStroke),
+                      ),
+                      onPressed: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _cycleAnchorDate,
+                          firstDate: DateTime.now()
+                              .subtract(const Duration(days: 3650)),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 3650)),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            _cycleAnchorDate =
+                                DateTime(picked.year, picked.month, picked.day);
+                          });
+                        }
+                      },
+                      icon: const Icon(Icons.event_outlined),
+                      label: Text(
+                        'Cycle anchor: ${DateFormat('yyyy-MM-dd').format(_cycleAnchorDate)}',
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -210,6 +242,42 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
                 onPressed: _save,
                 child: const Text('Save settings',
                     style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 8),
+              _sectionCard(
+                title: 'Backup & Restore',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.vividOrange,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: _exportBackup,
+                      icon: const Icon(Icons.upload_outlined),
+                      label: const Text('Export backup'),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.deepInk,
+                        side: const BorderSide(color: AppColors.glassStroke),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: _importBackup,
+                      icon: const Icon(Icons.download_outlined),
+                      label: const Text('Import backup'),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Backups contain the pay rule and every saved work entry in JSON format.',
+                      style:
+                          TextStyle(color: AppColors.softBlack, fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 14),
             ],
@@ -605,6 +673,8 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
       payCycleLengthDays: int.tryParse(_payCycleLength.text) ?? 7,
       payPeriodStartWeekday: _periodStartWeekday,
       paydayWeekday: _paydayWeekday,
+      cycleAnchorDate: DateTime(
+          _cycleAnchorDate.year, _cycleAnchorDate.month, _cycleAnchorDate.day),
       country: _country,
       taxNote: _taxNote,
       currency: _currency,
@@ -616,6 +686,70 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
         const SnackBar(content: Text('저장되었습니다.')),
       );
     }
+  }
+
+  Future<void> _exportBackup() async {
+    final backup = await Storage.exportBackup();
+    await Share.share(backup, subject: 'employeeee backup');
+  }
+
+  Future<void> _importBackup() async {
+    final controller = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Import backup'),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: TextField(
+            controller: controller,
+            maxLines: 14,
+            decoration: const InputDecoration(
+              labelText: 'Paste backup JSON',
+              alignLabelWithHint: true,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Import'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) {
+      controller.dispose();
+      return;
+    }
+
+    final ok = await Storage.importBackup(controller.text);
+    controller.dispose();
+    if (!mounted) return;
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Backup JSON is invalid.')),
+      );
+      return;
+    }
+
+    ref.invalidate(payRuleProvider);
+    ref.invalidate(workEntriesProvider);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Backup imported.')),
+    );
+  }
+
+  DateTime _defaultCycleAnchor(PayRule rule) {
+    final today = DateTime.now();
+    final date = DateTime(today.year, today.month, today.day);
+    final offset =
+        (date.weekday - rule.payPeriodStartWeekday) % rule.payCycleLengthDays;
+    return date.subtract(Duration(days: offset));
   }
 }
 

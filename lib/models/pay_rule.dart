@@ -22,6 +22,7 @@ class PayRule {
     this.leaveAccrualPerHour = 0,
     this.country = 'Custom',
     this.taxNote = '',
+    this.cycleAnchorDate,
   });
 
   final double baseWage;
@@ -43,6 +44,7 @@ class PayRule {
   final double leaveAccrualPerHour; // accrual hours per work hour
   final String country;
   final String taxNote;
+  final DateTime? cycleAnchorDate;
 
   PayRule copyWith({
     double? baseWage,
@@ -64,6 +66,7 @@ class PayRule {
     double? leaveAccrualPerHour,
     String? country,
     String? taxNote,
+    DateTime? cycleAnchorDate,
   }) {
     return PayRule(
       baseWage: baseWage ?? this.baseWage,
@@ -87,6 +90,7 @@ class PayRule {
       leaveAccrualPerHour: leaveAccrualPerHour ?? this.leaveAccrualPerHour,
       country: country ?? this.country,
       taxNote: taxNote ?? this.taxNote,
+      cycleAnchorDate: cycleAnchorDate ?? this.cycleAnchorDate,
     );
   }
 
@@ -110,6 +114,7 @@ class PayRule {
         'leaveAccrualPerHour': leaveAccrualPerHour,
         'country': country,
         'taxNote': taxNote,
+        'cycleAnchorDate': cycleAnchorDate?.toIso8601String(),
       };
 
   factory PayRule.fromJson(Map<String, dynamic> json) {
@@ -133,6 +138,9 @@ class PayRule {
       leaveAccrualPerHour: (json['leaveAccrualPerHour'] ?? 0).toDouble(),
       country: json['country'] ?? 'Custom',
       taxNote: json['taxNote'] ?? '',
+      cycleAnchorDate: json['cycleAnchorDate'] == null
+          ? null
+          : DateTime.tryParse(json['cycleAnchorDate'].toString()),
     );
   }
 }

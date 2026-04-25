@@ -9,6 +9,8 @@ import '../services/providers.dart';
 import '../theme/colors.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/glass_card.dart';
+import '../widgets/period_range_controls.dart';
+import 'work_entry_form_screen.dart';
 
 class WorkLogScreen extends ConsumerWidget {
   const WorkLogScreen({super.key});
@@ -16,32 +18,37 @@ class WorkLogScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isCompact = MediaQuery.sizeOf(context).width < 390;
     final entries = ref.watch(workEntriesProvider);
     final rule = ref.watch(payRuleProvider);
     final calc = ref.watch(payCalculatorProvider);
-    final cycle = calc.currentCycle(rule);
-    final showCurrentOnly = ref.watch(_currentOnlyProvider);
-    final filtered = showCurrentOnly
-        ? entries.where((e) {
-            final entryDate = DateTime(e.date.year, e.date.month, e.date.day);
-            return !entryDate.isBefore(cycle.$1) &&
-                !entryDate.isAfter(cycle.$2);
-          }).toList()
-        : entries;
+    final offset = ref.watch(cycleOffsetProvider);
+    final custom = ref.watch(customRangeProvider);
+    late final DateTime from;
+    late final DateTime to;
+    if (custom != null) {
+      from = custom.start;
+      to = custom.end;
+    } else {
+      final cycle = calc.currentCycle(rule);
+      final start =
+          cycle.$1.add(Duration(days: offset * rule.payCycleLengthDays));
+      from = start;
+      to = start.add(Duration(days: rule.payCycleLengthDays - 1));
+    }
+
+    final filtered = entries.where((e) {
+      final entryDate = DateTime(e.date.year, e.date.month, e.date.day);
+      return !entryDate.isBefore(from) && !entryDate.isAfter(to);
+    }).toList();
     final fmt = DateFormat('yyyy-MM-dd');
     final summary = calc.calculate(entries: filtered, rule: rule);
+    final payday = calc.paydayForPeriod(to, rule.paydayWeekday);
 
     return AppScaffold(
       appBar: AppBar(
         title: const Text('근무 기록지'),
         actions: [
-          IconButton(
-            icon: Icon(
-                showCurrentOnly ? Icons.filter_alt : Icons.filter_alt_outlined),
-            tooltip: '이번 주기만 보기',
-            onPressed: () => ref.read(_currentOnlyProvider.notifier).state =
-                !showCurrentOnly,
-          ),
           IconButton(
             icon: const Icon(Icons.ios_share),
             onPressed: filtered.isEmpty
@@ -56,44 +63,137 @@ class WorkLogScreen extends ConsumerWidget {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: filtered.isEmpty
-            ? const Column(
+            ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.inbox_outlined, size: 48, color: Colors.white70),
-                  SizedBox(height: 8),
-                  Text('No entries', style: TextStyle(color: Colors.white70)),
-                  Text('Add work entries to see them here',
+                  const Icon(Icons.inbox_outlined,
+                      size: 48, color: Colors.white70),
+                  const SizedBox(height: 8),
+                  const Text('No entries',
                       style: TextStyle(color: Colors.white70)),
+                  const Text('Add work entries to see them here',
+                      style: TextStyle(color: Colors.white70)),
+                  const SizedBox(height: 16),
+                  PeriodRangeControls(
+                    from: from,
+                    to: to,
+                    payday: payday,
+                    paydaySuffix: '',
+                    onPrevious: () {
+                      ref.read(customRangeProvider.notifier).state = null;
+                      ref.read(cycleOffsetProvider.notifier).state--;
+                    },
+                    onNext: () {
+                      ref.read(customRangeProvider.notifier).state = null;
+                      ref.read(cycleOffsetProvider.notifier).state++;
+                    },
+                    onCustomRange: () async {
+                      final picked = await showDateRangePicker(
+                        context: context,
+                        firstDate:
+                            DateTime.now().subtract(const Duration(days: 365)),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                        initialDateRange: DateTimeRange(start: from, end: to),
+                      );
+                      if (picked != null) {
+                        ref.read(customRangeProvider.notifier).state = picked;
+                      }
+                    },
+                    onMonth: () {
+                      final now = DateTime.now();
+                      final monthStart = DateTime(now.year, now.month, 1);
+                      final nextMonth = DateTime(now.year, now.month + 1, 1);
+                      final monthEnd =
+                          nextMonth.subtract(const Duration(days: 1));
+                      ref.read(customRangeProvider.notifier).state =
+                          DateTimeRange(start: monthStart, end: monthEnd);
+                      ref.read(cycleOffsetProvider.notifier).state = 0;
+                    },
+                    monthLabel: '이번 달',
+                    onReset: () {
+                      ref.read(customRangeProvider.notifier).state = null;
+                      ref.read(cycleOffsetProvider.notifier).state = 0;
+                    },
+                  ),
                 ],
               )
             : Column(
                 children: [
+                  PeriodRangeControls(
+                    from: from,
+                    to: to,
+                    payday: payday,
+                    paydaySuffix: '',
+                    onPrevious: () {
+                      ref.read(customRangeProvider.notifier).state = null;
+                      ref.read(cycleOffsetProvider.notifier).state--;
+                    },
+                    onNext: () {
+                      ref.read(customRangeProvider.notifier).state = null;
+                      ref.read(cycleOffsetProvider.notifier).state++;
+                    },
+                    onCustomRange: () async {
+                      final picked = await showDateRangePicker(
+                        context: context,
+                        firstDate:
+                            DateTime.now().subtract(const Duration(days: 365)),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                        initialDateRange: DateTimeRange(start: from, end: to),
+                      );
+                      if (picked != null) {
+                        ref.read(customRangeProvider.notifier).state = picked;
+                      }
+                    },
+                    onMonth: () {
+                      final now = DateTime.now();
+                      final monthStart = DateTime(now.year, now.month, 1);
+                      final nextMonth = DateTime(now.year, now.month + 1, 1);
+                      final monthEnd =
+                          nextMonth.subtract(const Duration(days: 1));
+                      ref.read(customRangeProvider.notifier).state =
+                          DateTimeRange(start: monthStart, end: monthEnd);
+                      ref.read(cycleOffsetProvider.notifier).state = 0;
+                    },
+                    monthLabel: '이번 달',
+                    onReset: () {
+                      ref.read(customRangeProvider.notifier).state = null;
+                      ref.read(cycleOffsetProvider.notifier).state = 0;
+                    },
+                  ),
+                  const SizedBox(height: 12),
                   GlassCard(
                     padding: const EdgeInsets.all(12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 10,
                           children: [
-                            _stat('Entries', '${filtered.length}'),
-                            _stat('Total Hours',
-                                '${summary.totalHours.toStringAsFixed(2)} h'),
+                            _stat('Entries', '${filtered.length}',
+                                compact: isCompact),
                             _stat(
-                                'Gross',
-                                NumberFormat.currency(
-                                        symbol: '${rule.currency} ')
-                                    .format(summary.gross)),
+                              'Total Hours',
+                              '${summary.totalHours.toStringAsFixed(2)} h',
+                              compact: isCompact,
+                            ),
                             _stat(
-                                'Net',
-                                NumberFormat.currency(
-                                        symbol: '${rule.currency} ')
-                                    .format(summary.net)),
+                              'Gross',
+                              NumberFormat.currency(symbol: '${rule.currency} ')
+                                  .format(summary.gross),
+                              compact: isCompact,
+                            ),
+                            _stat(
+                              'Net',
+                              NumberFormat.currency(symbol: '${rule.currency} ')
+                                  .format(summary.net),
+                              compact: isCompact,
+                            ),
                           ],
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          showCurrentOnly ? '필터: 현재 주기만' : '필터: 모든 기록',
+                          '기간: ${fmt.format(from)} ~ ${fmt.format(to)} · 지급일 ${fmt.format(payday)}',
                           style: const TextStyle(
                               color: AppColors.softBlack, fontSize: 12),
                         ),
@@ -135,39 +235,56 @@ class WorkLogScreen extends ConsumerWidget {
                                   ),
                               ],
                             ),
-                            trailing: IconButton(
-                              tooltip: '삭제',
-                              icon: const Icon(Icons.delete_outline),
-                              onPressed: () async {
-                                final confirmed = await showDialog<bool>(
-                                  context: context,
-                                  builder: (dialogContext) => AlertDialog(
-                                    title: const Text('기록 삭제'),
-                                    content: const Text('이 근무 기록을 삭제할까요?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(dialogContext, false),
-                                        child: const Text('취소'),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  tooltip: '수정',
+                                  icon: const Icon(Icons.edit_outlined),
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            WorkEntryFormScreen(entry: e),
                                       ),
-                                      FilledButton(
-                                        onPressed: () =>
-                                            Navigator.pop(dialogContext, true),
-                                        child: const Text('삭제'),
+                                    );
+                                  },
+                                ),
+                                IconButton(
+                                  tooltip: '삭제',
+                                  icon: const Icon(Icons.delete_outline),
+                                  onPressed: () async {
+                                    final confirmed = await showDialog<bool>(
+                                      context: context,
+                                      builder: (dialogContext) => AlertDialog(
+                                        title: const Text('기록 삭제'),
+                                        content: const Text('이 근무 기록을 삭제할까요?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(
+                                                dialogContext, false),
+                                            child: const Text('취소'),
+                                          ),
+                                          FilledButton(
+                                            onPressed: () => Navigator.pop(
+                                                dialogContext, true),
+                                            child: const Text('삭제'),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                );
-                                if (confirmed != true) return;
-                                await ref
-                                    .read(workEntriesProvider.notifier)
-                                    .remove(e);
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('근무 기록을 삭제했어요.')),
-                                );
-                              },
+                                    );
+                                    if (confirmed != true) return;
+                                    await ref
+                                        .read(workEntriesProvider.notifier)
+                                        .remove(e);
+                                    if (!context.mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text('근무 기록을 삭제했어요.')),
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
                           );
                         },
@@ -216,23 +333,27 @@ class WorkLogScreen extends ConsumerWidget {
     return ([header, ...lines]).join('\n');
   }
 
-  Widget _stat(String title, String value) {
-    return Column(
-      children: [
-        Text(title,
-            style: const TextStyle(color: AppColors.softBlack, fontSize: 12)),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppColors.deepInk,
-            shadows: [Shadow(color: Color(0x44000000), blurRadius: 3)],
+  Widget _stat(String title, String value, {required bool compact}) {
+    return SizedBox(
+      width: compact ? 130 : 148,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style: const TextStyle(color: AppColors.softBlack, fontSize: 12)),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.deepInk,
+              shadows: [Shadow(color: Color(0x44000000), blurRadius: 3)],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
-
-final _currentOnlyProvider = StateProvider<bool>((_) => false);

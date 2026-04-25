@@ -10,8 +10,10 @@ import '../widgets/app_scaffold.dart';
 import '../widgets/glass_card.dart';
 
 class WorkEntryFormScreen extends ConsumerStatefulWidget {
-  const WorkEntryFormScreen({super.key});
+  const WorkEntryFormScreen({super.key, this.entry});
   static const route = '/work-entry';
+
+  final WorkEntry? entry;
 
   @override
   ConsumerState<WorkEntryFormScreen> createState() =>
@@ -32,6 +34,21 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
   final _noteCtrl = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    final entry = widget.entry;
+    if (entry == null) return;
+
+    _date = DateTime(entry.date.year, entry.date.month, entry.date.day);
+    _start = TimeOfDay(hour: entry.start.hour, minute: entry.start.minute);
+    _end = TimeOfDay(hour: entry.end.hour, minute: entry.end.minute);
+    _breakMinutes = entry.breakMinutes;
+    _type = entry.type;
+    _isNight = entry.isNight;
+    _noteCtrl.text = entry.note;
+  }
+
+  @override
   void dispose() {
     _noteCtrl.dispose();
     super.dispose();
@@ -47,13 +64,16 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
     final tempPay = tempEntry == null
         ? null
         : calc.calculate(entries: [tempEntry], rule: rule);
+    final isEditing = widget.entry != null;
 
     return AppScaffold(
-      appBar: AppBar(title: const Text('근무 기록 입력')),
+      appBar: AppBar(
+        title: Text(isEditing ? '근무 기록 수정' : '근무 기록 입력'),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _save,
-        label: const Text('추가'),
-        icon: const Icon(Icons.add),
+        label: Text(isEditing ? '수정' : '추가'),
+        icon: Icon(isEditing ? Icons.save_outlined : Icons.add),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -311,52 +331,108 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
   }
 
   WorkEntry? _buildTempEntry() {
-    var startDate = DateTime(
-        _date.year, _date.month, _date.day, _start.hour, _start.minute);
-    var endDate =
-        DateTime(_date.year, _date.month, _date.day, _end.hour, _end.minute);
+    final startDate = DateTime(
+      _date.year,
+      _date.month,
+      _date.day,
+      _start.hour,
+      _start.minute,
+    );
+    var endDate = DateTime(
+      _date.year,
+      _date.month,
+      _date.day,
+      _end.hour,
+      _end.minute,
+    );
     if (endDate.isBefore(startDate)) {
       endDate = endDate.add(const Duration(days: 1));
     }
 
-    final entry = WorkEntry(
+    final entry = _buildEntry(
       date: _date,
       start: startDate,
       end: endDate,
-      breakMinutes: _breakMinutes,
-      type: _type,
-      note: _noteCtrl.text,
-      isNight: _isNight,
-      leaveHoursUsed: 0,
     );
 
     if (entry.paidHours <= 0) return null;
     return entry;
   }
 
-  void _save() {
-    final startDate = DateTime(
-        _date.year, _date.month, _date.day, _start.hour, _start.minute);
-    final endDate =
-        DateTime(_date.year, _date.month, _date.day, _end.hour, _end.minute);
+  Future<void> _save() async {
+    final entry = _buildTempEntry();
+    if (entry == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('근무 시간이 올바르지 않습니다.')),
+      );
+      return;
+    }
 
-    ref.read(workEntriesProvider.notifier).add(
-          WorkEntry(
-            date: _date,
-            start: startDate,
-            end: endDate,
-            breakMinutes: _breakMinutes,
-            type: _type,
-            note: _noteCtrl.text,
-            isNight: _isNight,
-            leaveHoursUsed: 0,
-          ),
-        );
+    final notifier = ref.read(workEntriesProvider.notifier);
+    final isEditing = widget.entry != null;
+
+    if (isEditing) {
+      await notifier.update(
+        widget.entry!.copyWith(
+          date: entry.date,
+          start: entry.start,
+          end: entry.end,
+          breakMinutes: entry.breakMinutes,
+          type: entry.type,
+          note: entry.note,
+          isNight: entry.isNight,
+          leaveHoursUsed: widget.entry!.leaveHoursUsed,
+          updatedAt: DateTime.now(),
+        ),
+      );
+    } else {
+      await notifier.add(
+        entry.copyWith(
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
+    }
 
     if (mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('추가되었습니다.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(isEditing ? '수정되었습니다.' : '추가되었습니다.')),
+      );
+      if (isEditing) {
+        Navigator.of(context).pop();
+      }
     }
+  }
+
+  WorkEntry _buildEntry({
+    required DateTime date,
+    required DateTime start,
+    required DateTime end,
+  }) {
+    final existing = widget.entry;
+    if (existing != null) {
+      return existing.copyWith(
+        date: date,
+        start: start,
+        end: end,
+        breakMinutes: _breakMinutes,
+        type: _type,
+        note: _noteCtrl.text,
+        isNight: _isNight,
+        leaveHoursUsed: existing.leaveHoursUsed,
+      );
+    }
+
+    return WorkEntry(
+      date: date,
+      start: start,
+      end: end,
+      breakMinutes: _breakMinutes,
+      type: _type,
+      note: _noteCtrl.text,
+      isNight: _isNight,
+      leaveHoursUsed: 0,
+    );
   }
 
   String _weekdayLabel(int weekday) {

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:collection/collection.dart';
 
 import '../models/pay_result.dart';
@@ -114,11 +116,19 @@ class PayCalculator {
   (DateTime start, DateTime end) currentCycle(PayRule rule,
       {DateTime? reference}) {
     final ref = reference ?? DateTime.now();
-    int offsetToStart =
-        (ref.weekday - rule.payPeriodStartWeekday) % rule.payCycleLengthDays;
-    final start = DateTime(ref.year, ref.month, ref.day)
-        .subtract(Duration(days: offsetToStart));
-    final end = start.add(Duration(days: rule.payCycleLengthDays - 1));
+    final refDate = DateTime(ref.year, ref.month, ref.day);
+    final cycleLength = math.max(1, rule.payCycleLengthDays);
+
+    final start = rule.cycleAnchorDate == null
+        ? refDate.subtract(
+            Duration(
+              days:
+                  (refDate.weekday - rule.payPeriodStartWeekday) % 7,
+            ),
+          )
+        : _anchoredCycleStart(refDate, rule.cycleAnchorDate!, cycleLength);
+
+    final end = start.add(Duration(days: cycleLength - 1));
     return (start, end);
   }
 
@@ -152,4 +162,15 @@ class PayCalculator {
   }
 
   DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  DateTime _anchoredCycleStart(
+    DateTime refDate,
+    DateTime anchorDate,
+    int cycleLength,
+  ) {
+    final anchor = DateTime(anchorDate.year, anchorDate.month, anchorDate.day);
+    final diffDays = refDate.difference(anchor).inDays;
+    final cycleIndex = (diffDays / cycleLength).floor();
+    return anchor.add(Duration(days: cycleIndex * cycleLength));
+  }
 }

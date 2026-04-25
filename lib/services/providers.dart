@@ -15,6 +15,8 @@ class PayRuleNotifier extends StateNotifier<PayRule> {
     _load();
   }
 
+  Future<void> reload() => _load();
+
   Future<void> _load() async {
     final saved = await Storage.loadRule();
     if (saved != null) state = saved;
@@ -42,6 +44,8 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
     _load();
   }
 
+  Future<void> reload() => _load();
+
   Future<void> _load() async {
     state = await Storage.loadEntries();
   }
@@ -51,8 +55,16 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
     await Storage.saveEntries(state);
   }
 
+  Future<void> update(WorkEntry updated) async {
+    state = [
+      for (final entry in state)
+        if (entry.id == updated.id) updated else entry,
+    ];
+    await Storage.saveEntries(state);
+  }
+
   Future<void> remove(WorkEntry entry) async {
-    state = state.where((e) => !_sameEntry(e, entry)).toList();
+    state = state.where((e) => e.id != entry.id).toList();
     await Storage.saveEntries(state);
   }
 
@@ -67,31 +79,21 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
         .where((e) => !e.date.isBefore(weekStart) && !e.date.isAfter(weekEnd))
         .toList();
     if (source.isEmpty) return;
+    final now = DateTime.now();
     final copied = source
-        .map((e) => WorkEntry(
-              date: e.date.add(const Duration(days: 7)),
-              start: e.start.add(const Duration(days: 7)),
-              end: e.end.add(const Duration(days: 7)),
-              breakMinutes: e.breakMinutes,
-              type: e.type,
-              note: e.note,
-              isNight: e.isNight,
-              leaveHoursUsed: e.leaveHoursUsed,
-            ))
+        .map(
+          (e) => e.copyWith(
+            id: WorkEntry.generateId(),
+            date: e.date.add(const Duration(days: 7)),
+            start: e.start.add(const Duration(days: 7)),
+            end: e.end.add(const Duration(days: 7)),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        )
         .toList();
     state = [...state, ...copied];
     await Storage.saveEntries(state);
-  }
-
-  bool _sameEntry(WorkEntry a, WorkEntry b) {
-    return a.date == b.date &&
-        a.start == b.start &&
-        a.end == b.end &&
-        a.breakMinutes == b.breakMinutes &&
-        a.type == b.type &&
-        a.note == b.note &&
-        a.isNight == b.isNight &&
-        a.leaveHoursUsed == b.leaveHoursUsed;
   }
 }
 
