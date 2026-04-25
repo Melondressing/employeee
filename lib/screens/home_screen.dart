@@ -36,14 +36,9 @@ class HomeScreen extends ConsumerWidget {
 
     return AppScaffold(
       appBar: AppBar(
-        titleSpacing: 0,
-        title: const Row(
-          children: [
-            Text('employeeee'),
-            SizedBox(width: 6),
-            Icon(Icons.payments_outlined, size: 20),
-          ],
-        ),
+        titleSpacing: 8,
+        title: const _HomeAppBarTitle(),
+        toolbarHeight: 58,
       ),
       body: Center(
         child: ConstrainedBox(
@@ -133,6 +128,35 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
+class _HomeAppBarTitle extends StatelessWidget {
+  const _HomeAppBarTitle();
+
+  @override
+  Widget build(BuildContext context) {
+    final isCompact = MediaQuery.sizeOf(context).width < 390;
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Row(
+          children: [
+            Text(
+              'employeeee',
+              style: TextStyle(
+                fontSize: isCompact ? 18 : 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(Icons.payments_outlined, size: isCompact ? 18 : 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _TopSummary extends StatelessWidget {
   const _TopSummary({
     required this.net,
@@ -154,45 +178,32 @@ class _TopSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF20110B), Color(0xFF30170D), Color(0xFF3A1C10)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x33000000), blurRadius: 18, offset: Offset(0, 12)),
-        ],
-      ),
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      '이번 급여 예상',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.2,
-                      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 390;
+        final horizontalPadding = isCompact ? 32.0 : 36.0;
+        final contentWidth = constraints.maxWidth - horizontalPadding;
+        final metricWidth = isCompact ? contentWidth : (contentWidth - 8) / 2;
+        final topContent = isCompact
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '이번 급여 예상',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
+                  ),
+                  const SizedBox(height: 4),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
                       net,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 32,
+                        fontSize: 30,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                         shadows: [
@@ -203,92 +214,165 @@ class _TopSummary extends StatelessWidget {
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 12),
+                  ),
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerLeft,
                     child: _Pill(label: '지급일 ${_d(payDate)}'),
                   ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            '${_d(cycleStart)} ~ ${_d(cycleEnd)}',
-            style: const TextStyle(color: Colors.white60),
-          ),
-          const SizedBox(height: 12),
-          Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(child: _MetricTile(label: '세전', value: gross)),
-                  const SizedBox(width: 8),
-                  Expanded(child: _MetricTile(label: '총 시간', value: hours)),
                 ],
-              ),
-              const SizedBox(height: 8),
-              Row(
+              )
+            : Row(
                 children: [
                   Expanded(
-                    child: _MetricTile(
-                      label: '급여 주기',
-                      value: '${_d(cycleStart)} ~ ${_d(cycleEnd)}',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '이번 급여 예상',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            net,
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  color: AppColors.accentGlow,
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Expanded(child: _MetricTile(label: '남은 연차', value: leave)),
+                  Flexible(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: _Pill(label: '지급일 ${_d(payDate)}'),
+                    ),
+                  ),
+                ],
+              );
+
+        return Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF20110B), Color(0xFF30170D), Color(0xFF3A1C10)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x33000000),
+                blurRadius: 18,
+                offset: Offset(0, 12),
+              ),
+            ],
+          ),
+          padding: EdgeInsets.all(isCompact ? 16 : 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              topContent,
+              const SizedBox(height: 10),
+              Text(
+                '${_d(cycleStart)} ~ ${_d(cycleEnd)}',
+                style: const TextStyle(color: Colors.white60),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _MetricTile(
+                    label: '세전',
+                    value: gross,
+                    width: metricWidth,
+                  ),
+                  _MetricTile(
+                    label: '총 시간',
+                    value: hours,
+                    width: metricWidth,
+                  ),
+                  _MetricTile(
+                    label: '급여 주기',
+                    value: '${_d(cycleStart)} ~ ${_d(cycleEnd)}',
+                    width: metricWidth,
+                  ),
+                  _MetricTile(
+                    label: '남은 연차',
+                    value: leave,
+                    width: metricWidth,
+                  ),
                 ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
 class _MetricTile extends StatelessWidget {
-  const _MetricTile({required this.label, required this.value});
+  const _MetricTile({
+    required this.label,
+    required this.value,
+    required this.width,
+  });
 
   final String label;
   final String value;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white70, fontSize: 11),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-              shadows: [
-                Shadow(color: Color(0x44000000), blurRadius: 3),
-              ],
+    return SizedBox(
+      width: width,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white70, fontSize: 11),
             ),
-          ),
-        ],
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                shadows: [
+                  Shadow(color: Color(0x44000000), blurRadius: 3),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

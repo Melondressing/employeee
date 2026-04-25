@@ -30,6 +30,8 @@ class _ReverseCalculatorScreenState
     final rule = ref.watch(payRuleProvider);
     final calc = ref.watch(payCalculatorProvider);
     final formatter = NumberFormat.currency(symbol: '${rule.currency} ');
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final statCardWidth = screenWidth < 420 ? (screenWidth - 56) / 2 : 136.0;
     final requiredBase = calc.reverseBaseWageFromHours(
       targetNet: _targetNet,
       rule: rule,
@@ -97,24 +99,36 @@ class _ReverseCalculatorScreenState
                       requiredBase == 0
                           ? '-'
                           : '${formatter.format(requiredBase)}/h',
+                      width: statCardWidth,
                     ),
                     _statCard(
                       '필요 세전',
                       requiredGross == 0
                           ? '-'
                           : formatter.format(requiredGross),
+                      width: statCardWidth,
                     ),
                     _statCard(
                       '세금',
                       requiredGross == 0 ? '-' : formatter.format(taxAmount),
+                      width: statCardWidth,
                     ),
-                    _statCard('총 시간', '${totalHours.toStringAsFixed(3)} h'),
-                    _statCard('가중 시간', '${totalWeighted.toStringAsFixed(3)} h'),
+                    _statCard(
+                      '총 시간',
+                      '${totalHours.toStringAsFixed(3)} h',
+                      width: statCardWidth,
+                    ),
+                    _statCard(
+                      '가중 시간',
+                      '${totalWeighted.toStringAsFixed(3)} h',
+                      width: statCardWidth,
+                    ),
                     _statCard(
                       '현재 시급 대비',
                       diffHourly == 0
                           ? '-'
                           : '${diffHourly > 0 ? '+' : ''}${diffHourly.toStringAsFixed(2)}/h',
+                      width: statCardWidth,
                     ),
                   ],
                 ),
@@ -152,9 +166,9 @@ class _ReverseCalculatorScreenState
     );
   }
 
-  Widget _statCard(String title, String value) {
+  Widget _statCard(String title, String value, {required double width}) {
     return Container(
-      width: 136,
+      width: width,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
