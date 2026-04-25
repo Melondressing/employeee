@@ -15,8 +15,165 @@
   <link rel="manifest" href="manifest.json">
 
   <title>employeeee</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg-top: #24140d;
+      --bg-bottom: #100905;
+      --card-top: rgba(77, 39, 21, 0.96);
+      --card-bottom: rgba(49, 25, 14, 0.96);
+      --stroke: rgba(255, 240, 224, 0.16);
+      --text-main: #fff6ea;
+      --text-soft: rgba(255, 238, 220, 0.72);
+      --accent: #d7a25b;
+      --accent-strong: #f0bf73;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 18% 22%, rgba(203, 150, 79, 0.18), transparent 24%),
+        radial-gradient(circle at 84% 78%, rgba(184, 126, 55, 0.16), transparent 20%),
+        linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    #app-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at 18% 22%, rgba(203, 150, 79, 0.18), transparent 24%),
+        radial-gradient(circle at 84% 78%, rgba(184, 126, 55, 0.16), transparent 20%),
+        linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+      transition: opacity 260ms ease, visibility 260ms ease;
+    }
+
+    #app-loader.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loader-card {
+      width: min(100%, 340px);
+      padding: 28px 24px 22px;
+      border-radius: 28px;
+      border: 1px solid var(--stroke);
+      background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+      box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.36),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      text-align: center;
+    }
+
+    .loader-icon-shell {
+      width: 92px;
+      height: 92px;
+      margin: 0 auto 18px;
+      border-radius: 28px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, rgba(255, 215, 164, 0.12), rgba(255, 215, 164, 0.03));
+      border: 1px solid rgba(255, 224, 190, 0.16);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .loader-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 22px;
+      object-fit: cover;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+    }
+
+    .loader-title {
+      margin: 0;
+      color: var(--text-main);
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .loader-subtitle {
+      margin: 10px 0 18px;
+      color: var(--text-soft);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .loader-bar {
+      position: relative;
+      width: 100%;
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .loader-bar::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: -42%;
+      width: 42%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+      box-shadow: 0 0 18px rgba(240, 191, 115, 0.35);
+      animation: loader-slide 1.15s ease-in-out infinite;
+    }
+
+    .loader-footnote {
+      margin: 14px 0 0;
+      color: rgba(255, 238, 220, 0.55);
+      font-size: 12px;
+      letter-spacing: 0.02em;
+    }
+
+    @keyframes loader-slide {
+      0% {
+        left: -42%;
+      }
+      100% {
+        left: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div id="app-loader" aria-live="polite" aria-label="Loading employeeee">
+    <div class="loader-card">
+      <div class="loader-icon-shell">
+        <img class="loader-icon" src="icons/Icon-192.png" alt="employeeee app icon" />
+      </div>
+      <p class="loader-title">employeeee</p>
+      <p class="loader-subtitle">근무 기록과 급여 계산을 준비하고 있어요.</p>
+      <div class="loader-bar"></div>
+      <p class="loader-footnote">Loading your wage workspace...</p>
+    </div>
+  </div>
+  <script>
+    window.addEventListener("flutter-first-frame", function () {
+      var loader = document.getElementById("app-loader");
+      if (loader) {
+        loader.classList.add("is-hidden");
+        window.setTimeout(function () {
+          loader.remove();
+        }, 320);
+      }
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
