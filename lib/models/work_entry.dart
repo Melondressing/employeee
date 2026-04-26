@@ -100,7 +100,7 @@ class WorkEntry {
 
   static String generateId() {
     final now = DateTime.now().microsecondsSinceEpoch;
-    final rand = Random().nextInt(1 << 32).toRadixString(16);
+    final rand = Random().nextInt(0x7fffffff).toRadixString(16);
     return 'we_${now}_$rand';
   }
 
