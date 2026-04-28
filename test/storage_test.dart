@@ -8,6 +8,7 @@ import 'package:employeeee/services/storage.dart';
 void main() {
   test('backup export and import round trip', () async {
     SharedPreferences.setMockInitialValues({});
+    Storage.resetCache();
 
     final rule = PayRule(
       baseWage: 27,
@@ -32,6 +33,7 @@ void main() {
     final backup = await Storage.exportBackup();
 
     SharedPreferences.setMockInitialValues({});
+    Storage.resetCache();
     final imported = await Storage.importBackup(backup);
     expect(imported, isTrue);
 

@@ -2,7 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
+import 'services/providers.dart';
+import 'services/storage.dart';
 
-void main() {
-  runApp(const ProviderScope(child: EmployeeeeApp()));
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Storage.init();
+  final bootstrap = await Storage.loadBootstrap();
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        bootstrapPayRuleProvider.overrideWithValue(bootstrap.rule),
+        bootstrapWorkEntriesProvider.overrideWithValue(bootstrap.entries),
+      ],
+      child: const EmployeeeeApp(),
+    ),
+  );
 }

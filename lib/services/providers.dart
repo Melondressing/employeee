@@ -6,13 +6,19 @@ import '../models/work_entry.dart';
 import 'pay_calculator.dart';
 import 'storage.dart';
 
+final bootstrapPayRuleProvider = Provider<PayRule?>((_) => null);
+final bootstrapWorkEntriesProvider = Provider<List<WorkEntry>?>((_) => null);
+
 final payRuleProvider = StateNotifierProvider<PayRuleNotifier, PayRule>((ref) {
-  return PayRuleNotifier();
+  return PayRuleNotifier(initialRule: ref.watch(bootstrapPayRuleProvider));
 });
 
 class PayRuleNotifier extends StateNotifier<PayRule> {
-  PayRuleNotifier() : super(PayRule(baseWage: 25)) {
-    _load();
+  PayRuleNotifier({PayRule? initialRule})
+      : super(initialRule ?? PayRule(baseWage: 25)) {
+    if (initialRule == null) {
+      _load();
+    }
   }
 
   Future<void> reload() => _load();
@@ -30,7 +36,9 @@ class PayRuleNotifier extends StateNotifier<PayRule> {
 
 final workEntriesProvider =
     StateNotifierProvider<WorkEntriesNotifier, List<WorkEntry>>((ref) {
-  return WorkEntriesNotifier();
+  return WorkEntriesNotifier(
+    initialEntries: ref.watch(bootstrapWorkEntriesProvider),
+  );
 });
 
 /// Offset in pay cycles: 0 = current, -1 = previous, +1 = next.
@@ -40,8 +48,11 @@ final cycleOffsetProvider = StateProvider<int>((_) => 0);
 final customRangeProvider = StateProvider<DateTimeRange?>((_) => null);
 
 class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
-  WorkEntriesNotifier() : super(const []) {
-    _load();
+  WorkEntriesNotifier({List<WorkEntry>? initialEntries})
+      : super(initialEntries ?? const []) {
+    if (initialEntries == null) {
+      _load();
+    }
   }
 
   Future<void> reload() => _load();
