@@ -6,9 +6,11 @@ import '../services/providers.dart';
 import '../theme/colors.dart';
 import '../widgets/app_page.dart';
 import '../widgets/app_scaffold.dart';
+import '../widgets/glass_card.dart';
 import '../widgets/nav_card.dart';
 import 'calculator_screen.dart';
 import 'login_screen.dart';
+import 'pay_history_screen.dart';
 import 'paycheck_checker_screen.dart';
 import 'reverse_calculator_screen.dart';
 import 'rules_screen.dart';
@@ -32,6 +34,18 @@ class HomeScreen extends ConsumerWidget {
     );
 
     final payDate = calc.paydayForPeriod(cycle.$2, rule.paydayWeekday);
+    final cycleLength =
+        rule.payCycleLengthDays <= 0 ? 1 : rule.payCycleLengthDays;
+    final previousStart = cycle.$1.subtract(Duration(days: cycleLength));
+    final previousEnd = previousStart.add(Duration(days: cycleLength - 1));
+    final previousResult = calc.calculate(
+      entries: entries,
+      rule: rule,
+      from: previousStart,
+      to: previousEnd,
+    );
+    final previousPayDate =
+        calc.paydayForPeriod(previousEnd, rule.paydayWeekday);
     final formatter = NumberFormat.currency(symbol: '${rule.currency} ');
     final leaveLeft = (rule.annualLeaveTotalHours - rule.annualLeaveUsedHours)
         .toStringAsFixed(1);
@@ -64,6 +78,19 @@ class HomeScreen extends ConsumerWidget {
               gross: formatter.format(cycleResult.gross),
               hours: '${cycleResult.totalHours.toStringAsFixed(2)} h',
               leave: '$leaveLeft h',
+            ),
+            const SizedBox(height: 10),
+            _PreviousPaySummary(
+              net: formatter.format(previousResult.net),
+              gross: formatter.format(previousResult.gross),
+              hours: '${previousResult.totalHours.toStringAsFixed(2)} h',
+              cycleStart: previousStart,
+              cycleEnd: previousEnd,
+              payDate: previousPayDate,
+              onTap: () => Navigator.pushNamed(
+                context,
+                PayHistoryScreen.route,
+              ),
             ),
             const SizedBox(height: 14),
             const Text(
@@ -110,6 +137,13 @@ class HomeScreen extends ConsumerWidget {
         icon: '📋',
         onTap: () => Navigator.pushNamed(context, WorkLogScreen.route),
         bg: AppColors.softRose,
+      ),
+      NavCard(
+        title: 'Pay History',
+        subtitle: 'Past pay · monthly view · Budget draft',
+        icon: '📆',
+        onTap: () => Navigator.pushNamed(context, PayHistoryScreen.route),
+        bg: AppColors.lavender,
       ),
       NavCard(
         title: 'Pay Calculator',
@@ -339,6 +373,125 @@ class _TopSummary extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _PreviousPaySummary extends StatelessWidget {
+  const _PreviousPaySummary({
+    required this.net,
+    required this.gross,
+    required this.hours,
+    required this.cycleStart,
+    required this.cycleEnd,
+    required this.payDate,
+    required this.onTap,
+  });
+
+  final String net;
+  final String gross;
+  final String hours;
+  final DateTime cycleStart;
+  final DateTime cycleEnd;
+  final DateTime payDate;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.mint.withValues(alpha: 0.38),
+                  AppColors.serenityBlue.withValues(alpha: 0.22),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(13),
+              border: Border.all(
+                color: AppColors.serenityBlue.withValues(alpha: 0.55),
+              ),
+            ),
+            child: const Icon(Icons.history_rounded, size: 20),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        '지난 급여 확인',
+                        style: TextStyle(
+                          color: AppColors.deepInk,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '지급일 ${_d(payDate)}',
+                      style: const TextStyle(
+                        color: AppColors.softBlack,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    Text(
+                      net,
+                      style: const TextStyle(
+                        color: AppColors.deepInk,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      '세전 $gross',
+                      style: const TextStyle(
+                        color: AppColors.softBlack,
+                        fontSize: 12,
+                      ),
+                    ),
+                    Text(
+                      hours,
+                      style: const TextStyle(
+                        color: AppColors.softBlack,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '${_d(cycleStart)} ~ ${_d(cycleEnd)}',
+                  style: const TextStyle(
+                    color: AppColors.softBlack,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Icon(Icons.chevron_right, color: AppColors.softBlack, size: 20),
+        ],
+      ),
     );
   }
 }

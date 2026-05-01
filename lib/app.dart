@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/calculator_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/pay_history_screen.dart';
 import 'screens/paycheck_checker_screen.dart';
 import 'screens/reverse_calculator_screen.dart';
 import 'screens/rules_screen.dart';
@@ -140,6 +141,7 @@ class EmployeeeeApp extends StatelessWidget {
         RulesScreen.route: (_) => const RulesScreen(),
         WorkEntryFormScreen.route: (_) => const WorkEntryFormScreen(),
         CalculatorScreen.route: (_) => const CalculatorScreen(),
+        PayHistoryScreen.route: (_) => const PayHistoryScreen(),
         ReverseCalculatorScreen.route: (_) => const ReverseCalculatorScreen(),
         PaycheckCheckerScreen.route: (_) => const PaycheckCheckerScreen(),
         ScenarioScreen.route: (_) => const ScenarioScreen(),
