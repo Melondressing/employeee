@@ -80,8 +80,8 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
   }
 
   /// Copy last 7 days of entries to next week (date +7).
-  Future<void> copyLastWeekForward() async {
-    if (state.isEmpty) return;
+  Future<List<WorkEntry>> copyLastWeekForward() async {
+    if (state.isEmpty) return const [];
     final latest =
         state.map((e) => e.date).reduce((a, b) => a.isAfter(b) ? a : b);
     final weekStart = latest.subtract(Duration(days: latest.weekday - 1));
@@ -89,7 +89,7 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
     final source = state
         .where((e) => !e.date.isBefore(weekStart) && !e.date.isAfter(weekEnd))
         .toList();
-    if (source.isEmpty) return;
+    if (source.isEmpty) return const [];
     final now = DateTime.now();
     final copied = source
         .map(
@@ -105,6 +105,7 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
         .toList();
     state = [...state, ...copied];
     await Storage.saveEntries(state);
+    return copied;
   }
 }
 
