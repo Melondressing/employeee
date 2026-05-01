@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../services/providers.dart';
 import '../theme/colors.dart';
+import '../widgets/app_page.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/tax_note.dart';
@@ -56,8 +57,7 @@ class _ReverseCalculatorScreenState
 
     return AppScaffold(
       appBar: AppBar(title: const Text('급여 역산기')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      body: AppPage(
         child: SingleChildScrollView(
           child: GlassCard(
             child: Column(

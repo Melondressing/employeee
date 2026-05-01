@@ -7,6 +7,7 @@ import '../models/work_entry.dart';
 import '../services/providers.dart';
 import '../theme/colors.dart';
 import '../widgets/app_date_picker.dart';
+import '../widgets/app_page.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/glass_card.dart';
 
@@ -87,76 +88,80 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
       appBar: AppBar(
         title: Text(isEditing ? '근무 기록 수정' : '근무 기록 입력'),
       ),
-      body: ListView(
+      body: AppPage(
+        fillHeight: true,
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
-        children: [
-          _section(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _dateControls(formatter),
-                const SizedBox(height: 12),
-                _presetSection(),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _timeControl(
-                        label: '시작',
-                        time: _start,
-                        onPick: (picked) =>
-                            setState(() => _start = _roundTo15(picked)),
-                        onAdjust: (minutes) => setState(
-                          () => _start = _adjustTime(_start, minutes),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            _section(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _dateControls(formatter),
+                  const SizedBox(height: 12),
+                  _presetSection(),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _timeControl(
+                          label: '시작',
+                          time: _start,
+                          onPick: (picked) =>
+                              setState(() => _start = _roundTo15(picked)),
+                          onAdjust: (minutes) => setState(
+                            () => _start = _adjustTime(_start, minutes),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _timeControl(
-                        label: '종료',
-                        time: _end,
-                        onPick: (picked) =>
-                            setState(() => _end = _roundTo15(picked)),
-                        onAdjust: (minutes) => setState(
-                          () => _end = _adjustTime(_end, minutes),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _timeControl(
+                          label: '종료',
+                          time: _end,
+                          onPick: (picked) =>
+                              setState(() => _end = _roundTo15(picked)),
+                          onAdjust: (minutes) => setState(
+                            () => _end = _adjustTime(_end, minutes),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _breakSelector(),
-                const SizedBox(height: 12),
-                _typeSelector(),
-                SwitchListTile(
-                  value: _isNight,
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  activeThumbColor: AppColors.vividOrange,
-                  title: const Text(
-                    '야간 근무 배율 적용',
-                    style: TextStyle(color: AppColors.deepInk),
+                    ],
                   ),
-                  onChanged: (value) => setState(() => _isNight = value),
-                ),
-                TextField(
-                  controller: _noteCtrl,
-                  decoration: const InputDecoration(labelText: '메모'),
-                  style: const TextStyle(color: AppColors.deepInk),
-                ),
-                const SizedBox(height: 12),
-                _payPreview(tempPay),
-                const SizedBox(height: 12),
-                _saveButtons(isEditing),
-              ],
+                  const SizedBox(height: 12),
+                  _breakSelector(),
+                  const SizedBox(height: 12),
+                  _typeSelector(),
+                  SwitchListTile(
+                    value: _isNight,
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    activeThumbColor: AppColors.vividOrange,
+                    title: const Text(
+                      '야간 근무 배율 적용',
+                      style: TextStyle(color: AppColors.deepInk),
+                    ),
+                    onChanged: (value) => setState(() => _isNight = value),
+                  ),
+                  TextField(
+                    controller: _noteCtrl,
+                    decoration: const InputDecoration(labelText: '메모'),
+                    style: const TextStyle(color: AppColors.deepInk),
+                  ),
+                  const SizedBox(height: 12),
+                  _payPreview(tempPay),
+                  const SizedBox(height: 12),
+                  _saveButtons(isEditing),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          _dayEntriesSection(selectedDateEntries, formatter),
-          const SizedBox(height: 12),
-          _weekToolsSection(weekEntries, formatter, weekStart, weekEnd),
-        ],
+            const SizedBox(height: 12),
+            _dayEntriesSection(selectedDateEntries, formatter),
+            const SizedBox(height: 12),
+            _weekToolsSection(weekEntries, formatter, weekStart, weekEnd),
+          ],
+        ),
       ),
     );
   }

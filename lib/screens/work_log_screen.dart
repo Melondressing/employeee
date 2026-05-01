@@ -8,6 +8,7 @@ import '../models/work_entry.dart';
 import '../services/providers.dart';
 import '../theme/colors.dart';
 import '../widgets/app_date_picker.dart';
+import '../widgets/app_page.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/period_range_controls.dart';
@@ -61,8 +62,8 @@ class WorkLogScreen extends ConsumerWidget {
           )
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      body: AppPage(
+        fillHeight: true,
         child: filtered.isEmpty
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,

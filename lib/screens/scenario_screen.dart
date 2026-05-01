@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../services/providers.dart';
 import '../theme/colors.dart';
+import '../widgets/app_page.dart';
 import '../widgets/app_scaffold.dart';
 
 class ScenarioScreen extends ConsumerStatefulWidget {
@@ -40,8 +41,8 @@ class _ScenarioScreenState extends ConsumerState<ScenarioScreen> {
 
     return AppScaffold(
       appBar: AppBar(title: const Text('시나리오 비교')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      body: AppPage(
+        fillHeight: true,
         child: entries.isEmpty
             ? const Center(
                 child: Text('근무 기록을 먼저 입력하세요.',

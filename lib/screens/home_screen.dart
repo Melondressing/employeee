@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../services/providers.dart';
 import '../theme/colors.dart';
+import '../widgets/app_page.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/nav_card.dart';
 import 'calculator_screen.dart';
@@ -48,40 +49,39 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            children: [
-              _TopSummary(
-                net: formatter.format(cycleResult.net),
-                cycleStart: cycle.$1,
-                cycleEnd: cycle.$2,
-                payDate: payDate,
-                gross: formatter.format(cycleResult.gross),
-                hours: '${cycleResult.totalHours.toStringAsFixed(2)} h',
-                leave: '$leaveLeft h',
+      body: AppPage(
+        fillHeight: true,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            _TopSummary(
+              net: formatter.format(cycleResult.net),
+              cycleStart: cycle.$1,
+              cycleEnd: cycle.$2,
+              payDate: payDate,
+              gross: formatter.format(cycleResult.gross),
+              hours: '${cycleResult.totalHours.toStringAsFixed(2)} h',
+              leave: '$leaveLeft h',
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'Tools',
+              style: TextStyle(
+                color: AppColors.deepInk,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
               ),
-              const SizedBox(height: 14),
-              const Text(
-                'Tools',
-                style: TextStyle(
-                  color: AppColors.deepInk,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.3,
-                ),
+            ),
+            const SizedBox(height: 8),
+            ..._navCards(context).map(
+              (card) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: card,
               ),
-              const SizedBox(height: 8),
-              ..._navCards(context).map(
-                (card) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: card,
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
-          ),
+            ),
+            const SizedBox(height: 12),
+          ],
         ),
       ),
     );

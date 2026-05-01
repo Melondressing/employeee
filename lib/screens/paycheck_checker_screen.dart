@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../services/providers.dart';
 import '../theme/colors.dart';
 import '../widgets/app_date_picker.dart';
+import '../widgets/app_page.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/period_range_controls.dart';
@@ -57,8 +58,8 @@ class _PaycheckCheckerScreenState extends ConsumerState<PaycheckCheckerScreen> {
 
     return AppScaffold(
       appBar: AppBar(title: const Text('급여 검증기')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      body: AppPage(
+        fillHeight: entries.isEmpty,
         child: entries.isEmpty
             ? const Center(
                 child: Text('근무 기록을 먼저 입력하세요.',

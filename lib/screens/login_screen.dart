@@ -5,6 +5,7 @@ import '../models/auth_session.dart';
 import '../services/auth_service.dart';
 import '../theme/colors.dart';
 import '../widgets/app_background.dart';
+import '../widgets/app_page.dart';
 import '../widgets/glass_card.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -37,63 +38,62 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       backgroundColor: Colors.transparent,
       body: AppBackground(
         child: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 460),
-              child: ListView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-                shrinkWrap: true,
-                children: [
-                  if (canPop)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: IconButton.filledTonal(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close),
-                      ),
-                    ),
-                  const SizedBox(height: 8),
-                  const _BrandMark(),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'employeeee',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: AppColors.deepInk,
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.9,
+          child: AppPage(
+            maxWidth: AppPage.loginMaxWidth,
+            fillHeight: true,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+            child: ListView(
+              padding: EdgeInsets.zero,
+              shrinkWrap: true,
+              children: [
+                if (canPop)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton.filledTonal(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  Text(
-                    session == null ? '내 급여 작업공간으로 들어가기' : '계정 상태',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: AppColors.deepInk,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
-                    ),
+                const SizedBox(height: 8),
+                const _BrandMark(),
+                const SizedBox(height: 10),
+                const Text(
+                  'employeeee',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.deepInk,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.9,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    session == null
-                        ? '지금은 기기 저장 모드로 안전하게 이어가고,\n다음 단계에서 Cloudflare D1 동기화를 붙일 수 있게 준비해뒀어요.'
-                        : '${session.displayName} workspace\n${session.email}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: AppColors.softBlack,
-                      height: 1.45,
-                    ),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  session == null ? '내 급여 작업공간으로 들어가기' : '계정 상태',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.deepInk,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
                   ),
-                  const SizedBox(height: 18),
-                  if (session == null) _loginForm() else _sessionCard(session),
-                  const SizedBox(height: 14),
-                  _syncPlanCard(),
-                ],
-              ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  session == null
+                      ? '지금은 기기 저장 모드로 안전하게 이어가고,\n다음 단계에서 Cloudflare D1 동기화를 붙일 수 있게 준비해뒀어요.'
+                      : '${session.displayName} workspace\n${session.email}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.softBlack,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                if (session == null) _loginForm() else _sessionCard(session),
+                const SizedBox(height: 14),
+                _syncPlanCard(),
+              ],
             ),
           ),
         ),

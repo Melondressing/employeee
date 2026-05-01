@@ -8,6 +8,7 @@ import '../services/providers.dart';
 import '../services/storage.dart';
 import '../theme/colors.dart';
 import '../widgets/app_date_picker.dart';
+import '../widgets/app_page.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/glass_card.dart';
 
@@ -93,219 +94,218 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
   Widget build(BuildContext context) {
     return AppScaffold(
       appBar: AppBar(title: const Text('Settings & Rules')),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 430),
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            children: [
-              _sectionCard(
-                title: 'Currency & Country',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _currencyGrid(),
-                    const SizedBox(height: 6),
-                    Text(
-                      '선택: $_currency · $_country',
-                      style: const TextStyle(
-                          color: AppColors.softBlack, fontSize: 12),
+      body: AppPage(
+        maxWidth: AppPage.compactMaxWidth,
+        fillHeight: true,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            _sectionCard(
+              title: 'Currency & Country',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _currencyGrid(),
+                  const SizedBox(height: 6),
+                  Text(
+                    '선택: $_currency · $_country',
+                    style: const TextStyle(
+                        color: AppColors.softBlack, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            _sectionCard(
+              title: 'Hourly Wage',
+              child: Column(
+                children: [
+                  _numField(_baseWage, 'Hourly wage', suffix: _currency),
+                  const SizedBox(height: 6),
+                  _previewBlock(),
+                ],
+              ),
+            ),
+            _sectionCard(
+              title: 'Employment Status',
+              child: _employmentTypePicker(),
+            ),
+            _sectionCard(
+              title: 'Penalty Rates / Multipliers',
+              child: Column(
+                children: [
+                  _numField(_sat, 'Saturday ×'),
+                  _numField(_sun, 'Sunday ×'),
+                  _numField(_holiday, 'Public holiday ×'),
+                  _numField(_night, 'Night loading ×'),
+                ],
+              ),
+            ),
+            _sectionCard(
+              title: 'Tax & Deductions',
+              child: Column(
+                children: [
+                  _numField(_tax, 'Income tax (%)'),
+                  _numField(_localTax, 'Local / State tax (%)'),
+                  _numField(_insurance, 'Super / Insurance (%)'),
+                  if (_taxNote.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        _taxNote,
+                        style: const TextStyle(
+                            color: AppColors.softBlack, fontSize: 12),
+                      ),
                     ),
-                  ],
-                ),
+                ],
               ),
-              _sectionCard(
-                title: 'Hourly Wage',
-                child: Column(
-                  children: [
-                    _numField(_baseWage, 'Hourly wage', suffix: _currency),
-                    const SizedBox(height: 6),
-                    _previewBlock(),
-                  ],
-                ),
-              ),
-              _sectionCard(
-                title: 'Employment Status',
-                child: _employmentTypePicker(),
-              ),
-              _sectionCard(
-                title: 'Penalty Rates / Multipliers',
-                child: Column(
-                  children: [
-                    _numField(_sat, 'Saturday ×'),
-                    _numField(_sun, 'Sunday ×'),
-                    _numField(_holiday, 'Public holiday ×'),
-                    _numField(_night, 'Night loading ×'),
-                  ],
-                ),
-              ),
-              _sectionCard(
-                title: 'Tax & Deductions',
-                child: Column(
-                  children: [
-                    _numField(_tax, 'Income tax (%)'),
-                    _numField(_localTax, 'Local / State tax (%)'),
-                    _numField(_insurance, 'Super / Insurance (%)'),
-                    if (_taxNote.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Text(
-                          _taxNote,
-                          style: const TextStyle(
-                              color: AppColors.softBlack, fontSize: 12),
+            ),
+            _sectionCard(
+              title: 'Pay Cycle',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _numField(_payCycleLength, 'Cycle length (days)',
+                      suffix: '일'),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      _chipButton('7', () => _payCycleLength.text = '7'),
+                      _chipButton('14', () => _payCycleLength.text = '14'),
+                      _chipButton('28', () => _payCycleLength.text = '28'),
+                      _chipButton('30', () => _payCycleLength.text = '30'),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<int>(
+                    initialValue: _periodStartWeekday,
+                    dropdownColor: AppColors.cardSurfaceStrong,
+                    style: const TextStyle(color: AppColors.deepInk),
+                    decoration:
+                        const InputDecoration(labelText: 'Cycle start day'),
+                    items: _weekdayItems(),
+                    onChanged: (v) => setState(
+                        () => _periodStartWeekday = v ?? DateTime.monday),
+                  ),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<int>(
+                    initialValue: _paydayWeekday,
+                    dropdownColor: AppColors.cardSurfaceStrong,
+                    style: const TextStyle(color: AppColors.deepInk),
+                    decoration: const InputDecoration(
+                        labelText: 'Payday (0 = same day)'),
+                    items: _weekdayItems(includeSameDay: true),
+                    onChanged: (v) =>
+                        setState(() => _paydayWeekday = v ?? DateTime.friday),
+                  ),
+                  const SizedBox(height: 6),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.deepInk,
+                      side: const BorderSide(color: AppColors.glassStroke),
+                    ),
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        locale: calendarLocaleForCountry(
+                          country: _country,
+                          currency: _currency,
                         ),
-                      ),
-                  ],
-                ),
+                        initialDate: _cycleAnchorDate,
+                        firstDate:
+                            DateTime.now().subtract(const Duration(days: 3650)),
+                        lastDate:
+                            DateTime.now().add(const Duration(days: 3650)),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          _cycleAnchorDate =
+                              DateTime(picked.year, picked.month, picked.day);
+                        });
+                      }
+                    },
+                    icon: const Icon(Icons.event_outlined),
+                    label: Text(
+                      'Cycle anchor: ${DateFormat('yyyy-MM-dd').format(_cycleAnchorDate)}',
+                    ),
+                  ),
+                ],
               ),
-              _sectionCard(
-                title: 'Pay Cycle',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _numField(_payCycleLength, 'Cycle length (days)',
-                        suffix: '일'),
-                    Wrap(
-                      spacing: 8,
-                      children: [
-                        _chipButton('7', () => _payCycleLength.text = '7'),
-                        _chipButton('14', () => _payCycleLength.text = '14'),
-                        _chipButton('28', () => _payCycleLength.text = '28'),
-                        _chipButton('30', () => _payCycleLength.text = '30'),
-                      ],
+            ),
+            _sectionCard(
+              title: 'Annual Leave',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _employmentType == EmploymentType.casual
+                        ? '캐주얼은 보통 연차가 적립되지 않아서 계산에서는 적립률을 0으로 처리합니다.'
+                        : '풀타임/파트타임은 일한 시간에 비례해 연차가 적립되도록 저장합니다.',
+                    style: const TextStyle(
+                      color: AppColors.softBlack,
+                      fontSize: 12,
+                      height: 1.35,
                     ),
-                    const SizedBox(height: 6),
-                    DropdownButtonFormField<int>(
-                      initialValue: _periodStartWeekday,
-                      dropdownColor: AppColors.cardSurfaceStrong,
-                      style: const TextStyle(color: AppColors.deepInk),
-                      decoration:
-                          const InputDecoration(labelText: 'Cycle start day'),
-                      items: _weekdayItems(),
-                      onChanged: (v) => setState(
-                          () => _periodStartWeekday = v ?? DateTime.monday),
-                    ),
-                    const SizedBox(height: 6),
-                    DropdownButtonFormField<int>(
-                      initialValue: _paydayWeekday,
-                      dropdownColor: AppColors.cardSurfaceStrong,
-                      style: const TextStyle(color: AppColors.deepInk),
-                      decoration: const InputDecoration(
-                          labelText: 'Payday (0 = same day)'),
-                      items: _weekdayItems(includeSameDay: true),
-                      onChanged: (v) =>
-                          setState(() => _paydayWeekday = v ?? DateTime.friday),
-                    ),
-                    const SizedBox(height: 6),
-                    OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.deepInk,
-                        side: const BorderSide(color: AppColors.glassStroke),
-                      ),
-                      onPressed: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          locale: calendarLocaleForCountry(
-                            country: _country,
-                            currency: _currency,
-                          ),
-                          initialDate: _cycleAnchorDate,
-                          firstDate: DateTime.now()
-                              .subtract(const Duration(days: 3650)),
-                          lastDate:
-                              DateTime.now().add(const Duration(days: 3650)),
-                        );
-                        if (picked != null) {
-                          setState(() {
-                            _cycleAnchorDate =
-                                DateTime(picked.year, picked.month, picked.day);
-                          });
-                        }
-                      },
-                      icon: const Icon(Icons.event_outlined),
-                      label: Text(
-                        'Cycle anchor: ${DateFormat('yyyy-MM-dd').format(_cycleAnchorDate)}',
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 8),
+                  _numField(_leaveTotal, 'Total leave (hours)'),
+                  _numField(_leaveUsed, 'Used leave (hours)'),
+                  _numField(_leaveAccrual, 'Accrual per work hour',
+                      suffix: 'h',
+                      enabled: _employmentType != EmploymentType.casual),
+                ],
               ),
-              _sectionCard(
-                title: 'Annual Leave',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _employmentType == EmploymentType.casual
-                          ? '캐주얼은 보통 연차가 적립되지 않아서 계산에서는 적립률을 0으로 처리합니다.'
-                          : '풀타임/파트타임은 일한 시간에 비례해 연차가 적립되도록 저장합니다.',
-                      style: const TextStyle(
-                        color: AppColors.softBlack,
-                        fontSize: 12,
-                        height: 1.35,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _numField(_leaveTotal, 'Total leave (hours)'),
-                    _numField(_leaveUsed, 'Used leave (hours)'),
-                    _numField(_leaveAccrual, 'Accrual per work hour',
-                        suffix: 'h',
-                        enabled: _employmentType != EmploymentType.casual),
-                  ],
-                ),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.golden,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
               ),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.golden,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                ),
-                onPressed: _save,
-                child: const Text('Save settings',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+              onPressed: _save,
+              child: const Text('Save settings',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(height: 8),
+            _sectionCard(
+              title: 'Backup & Restore',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.vividOrange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: _exportBackup,
+                    icon: const Icon(Icons.upload_outlined),
+                    label: const Text('Export backup'),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.deepInk,
+                      side: const BorderSide(color: AppColors.glassStroke),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: _importBackup,
+                    icon: const Icon(Icons.download_outlined),
+                    label: const Text('Import backup'),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Backups contain the pay rule and every saved work entry in JSON format.',
+                    style: TextStyle(color: AppColors.softBlack, fontSize: 12),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              _sectionCard(
-                title: 'Backup & Restore',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.vividOrange,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      onPressed: _exportBackup,
-                      icon: const Icon(Icons.upload_outlined),
-                      label: const Text('Export backup'),
-                    ),
-                    const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.deepInk,
-                        side: const BorderSide(color: AppColors.glassStroke),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      onPressed: _importBackup,
-                      icon: const Icon(Icons.download_outlined),
-                      label: const Text('Import backup'),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Backups contain the pay rule and every saved work entry in JSON format.',
-                      style:
-                          TextStyle(color: AppColors.softBlack, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-            ],
-          ),
+            ),
+            const SizedBox(height: 14),
+          ],
         ),
       ),
     );
