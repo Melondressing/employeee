@@ -6,6 +6,7 @@ import '../models/pay_rule.dart';
 import '../models/work_entry.dart';
 import '../services/providers.dart';
 import '../theme/colors.dart';
+import '../widgets/app_date_picker.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/glass_card.dart';
 
@@ -575,8 +576,9 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
   }
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
+    final picked = await showAppDatePicker(
       context: context,
+      rule: ref.read(payRuleProvider),
       initialDate: _date,
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365)),

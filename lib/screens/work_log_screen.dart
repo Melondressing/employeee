@@ -7,6 +7,7 @@ import '../models/pay_rule.dart';
 import '../models/work_entry.dart';
 import '../services/providers.dart';
 import '../theme/colors.dart';
+import '../widgets/app_date_picker.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/period_range_controls.dart';
@@ -88,8 +89,9 @@ class WorkLogScreen extends ConsumerWidget {
                       ref.read(cycleOffsetProvider.notifier).state++;
                     },
                     onCustomRange: () async {
-                      final picked = await showDateRangePicker(
+                      final picked = await showAppDateRangePicker(
                         context: context,
+                        rule: rule,
                         firstDate:
                             DateTime.now().subtract(const Duration(days: 365)),
                         lastDate: DateTime.now().add(const Duration(days: 365)),
@@ -133,8 +135,9 @@ class WorkLogScreen extends ConsumerWidget {
                       ref.read(cycleOffsetProvider.notifier).state++;
                     },
                     onCustomRange: () async {
-                      final picked = await showDateRangePicker(
+                      final picked = await showAppDateRangePicker(
                         context: context,
+                        rule: rule,
                         firstDate:
                             DateTime.now().subtract(const Duration(days: 365)),
                         lastDate: DateTime.now().add(const Duration(days: 365)),

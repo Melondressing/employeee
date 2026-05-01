@@ -7,6 +7,7 @@ import '../models/pay_rule.dart';
 import '../services/providers.dart';
 import '../services/storage.dart';
 import '../theme/colors.dart';
+import '../widgets/app_date_picker.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/glass_card.dart';
 
@@ -198,6 +199,10 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
                       onPressed: () async {
                         final picked = await showDatePicker(
                           context: context,
+                          locale: calendarLocaleForCountry(
+                            country: _country,
+                            currency: _currency,
+                          ),
                           initialDate: _cycleAnchorDate,
                           firstDate: DateTime.now()
                               .subtract(const Duration(days: 3650)),

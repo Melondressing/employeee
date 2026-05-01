@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../services/providers.dart';
 import '../theme/colors.dart';
+import '../widgets/app_date_picker.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/period_range_controls.dart';
@@ -82,22 +83,26 @@ class _PaycheckCheckerScreenState extends ConsumerState<PaycheckCheckerScreen> {
                           ref.read(cycleOffsetProvider.notifier).state++;
                         },
                         onCustomRange: () async {
-                          final picked = await showDateRangePicker(
+                          final picked = await showAppDateRangePicker(
                             context: context,
+                            rule: rule,
                             firstDate: DateTime.now()
                                 .subtract(const Duration(days: 365)),
-                            lastDate: DateTime.now()
-                                .add(const Duration(days: 365)),
-                            initialDateRange: DateTimeRange(start: from, end: to),
+                            lastDate:
+                                DateTime.now().add(const Duration(days: 365)),
+                            initialDateRange:
+                                DateTimeRange(start: from, end: to),
                           );
                           if (picked != null) {
-                            ref.read(customRangeProvider.notifier).state = picked;
+                            ref.read(customRangeProvider.notifier).state =
+                                picked;
                           }
                         },
                         onMonth: () {
                           final now = DateTime.now();
                           final monthStart = DateTime(now.year, now.month, 1);
-                          final nextMonth = DateTime(now.year, now.month + 1, 1);
+                          final nextMonth =
+                              DateTime(now.year, now.month + 1, 1);
                           final monthEnd =
                               nextMonth.subtract(const Duration(days: 1));
                           ref.read(customRangeProvider.notifier).state =
