@@ -94,4 +94,31 @@ void main() {
     expect(cycle.$1, DateTime(2026, 4, 20));
     expect(cycle.$2, DateTime(2026, 5, 3));
   });
+
+  test('casual employment does not accrue annual leave', () {
+    final calc = PayCalculator();
+    final rule = PayRule(
+      baseWage: 30,
+      employmentType: EmploymentType.casual,
+      taxRate: 0,
+      localTaxRate: 0,
+      insuranceRate: 0,
+      leaveAccrualPerHour: 0.0769,
+    );
+
+    final result = calc.calculate(
+      entries: [
+        WorkEntry(
+          date: DateTime(2026, 5, 1),
+          start: DateTime(2026, 5, 1, 9),
+          end: DateTime(2026, 5, 1, 17),
+          breakMinutes: 0,
+        ),
+      ],
+      rule: rule,
+    );
+
+    expect(result.totalHours, 8);
+    expect(result.accruedLeaveHours, 0);
+  });
 }

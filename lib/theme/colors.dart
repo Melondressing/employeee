@@ -14,14 +14,17 @@ class AppColors {
   static const mint = Color(0xFFA8DADC);
 
   static const deepInk = Color(0xFF374151);
-  static const softBlack = Color(0xFF687487);
+  static const softBlack = Color(0xFF5D697C);
   static const offWhite = Color(0xFFFDF9F4);
 
-  static const cardSurface = Color(0xDFFFFFFF);
-  static const cardSurfaceStrong = Color(0xF5FFFFFF);
-  static const cardSurfaceAlt = Color(0xEFFFF7F2);
-  static const glassSurface = Color(0x80FFFFFF);
-  static const glassStroke = Color(0xB3FFFFFF);
+  static const cardSurface = Color(0xF8FFFFFF);
+  static const cardSurfaceStrong = Color(0xFFFFFCFA);
+  static const cardSurfaceAlt = Color(0xFFFFF1E8);
+  static const glassSurface = Color(0xD9FFFFFF);
+  static const glassStroke = Color(0xB8BBA3C7);
+  static const inputSurface = Color(0xFFFFF8F2);
+  static const inputStroke = Color(0xCCBBA3C7);
+  static const shadowTint = Color(0x225D6B8C);
 
   static const accentGlow = Color(0x66C9ADA7);
 }

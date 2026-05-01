@@ -7,6 +7,7 @@ import '../theme/colors.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/nav_card.dart';
 import 'calculator_screen.dart';
+import 'login_screen.dart';
 import 'paycheck_checker_screen.dart';
 import 'reverse_calculator_screen.dart';
 import 'rules_screen.dart';
@@ -39,6 +40,13 @@ class HomeScreen extends ConsumerWidget {
         titleSpacing: 8,
         title: const _HomeAppBarTitle(),
         toolbarHeight: 58,
+        actions: [
+          IconButton(
+            tooltip: 'Account',
+            onPressed: () => Navigator.pushNamed(context, LoginScreen.route),
+            icon: const Icon(Icons.account_circle_outlined),
+          ),
+        ],
       ),
       body: Center(
         child: ConstrainedBox(

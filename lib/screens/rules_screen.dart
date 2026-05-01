@@ -39,6 +39,7 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
   String _country = 'Custom';
   String _taxNote = '';
   String _currency = 'AUD';
+  EmploymentType _employmentType = EmploymentType.partTime;
 
   @override
   void initState() {
@@ -68,6 +69,7 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
     _country = rule.country;
     _taxNote = rule.taxNote;
     _currency = rule.currency;
+    _employmentType = rule.employmentType;
   }
 
   @override
@@ -121,6 +123,10 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
                     _previewBlock(),
                   ],
                 ),
+              ),
+              _sectionCard(
+                title: 'Employment Status',
+                child: _employmentTypePicker(),
               ),
               _sectionCard(
                 title: 'Penalty Rates / Multipliers',
@@ -227,11 +233,24 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
               _sectionCard(
                 title: 'Annual Leave',
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      _employmentType == EmploymentType.casual
+                          ? '캐주얼은 보통 연차가 적립되지 않아서 계산에서는 적립률을 0으로 처리합니다.'
+                          : '풀타임/파트타임은 일한 시간에 비례해 연차가 적립되도록 저장합니다.',
+                      style: const TextStyle(
+                        color: AppColors.softBlack,
+                        fontSize: 12,
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     _numField(_leaveTotal, 'Total leave (hours)'),
                     _numField(_leaveUsed, 'Used leave (hours)'),
                     _numField(_leaveAccrual, 'Accrual per work hour',
-                        suffix: 'h'),
+                        suffix: 'h',
+                        enabled: _employmentType != EmploymentType.casual),
                   ],
                 ),
               ),
@@ -440,11 +459,68 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
     );
   }
 
-  Widget _numField(TextEditingController c, String label, {String? suffix}) {
+  Widget _employmentTypePicker() {
+    const types = [
+      EmploymentType.fullTime,
+      EmploymentType.partTime,
+      EmploymentType.casual,
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final type in types)
+              ChoiceChip(
+                label: Text(type.shortLabel),
+                selected: _employmentType == type,
+                selectedColor: AppColors.lavender.withValues(alpha: 0.32),
+                backgroundColor: AppColors.cardSurfaceAlt,
+                labelStyle: const TextStyle(color: AppColors.deepInk),
+                side: BorderSide(
+                  color: _employmentType == type
+                      ? AppColors.lavender
+                      : AppColors.inputStroke,
+                ),
+                onSelected: (_) => _setEmploymentType(type),
+              ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: AppColors.cardSurfaceAlt,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.inputStroke),
+          ),
+          child: Text(
+            _employmentTypeHelp,
+            style: const TextStyle(
+              color: AppColors.softBlack,
+              height: 1.35,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _numField(
+    TextEditingController c,
+    String label, {
+    String? suffix,
+    bool enabled = true,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextField(
         controller: c,
+        enabled: enabled,
         style: const TextStyle(color: AppColors.deepInk),
         cursorColor: AppColors.warmYellow,
         keyboardType:
@@ -507,9 +583,9 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.2),
+        color: AppColors.inputSurface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.glassStroke),
+        border: Border.all(color: AppColors.inputStroke),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -530,6 +606,28 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
         ],
       ),
     );
+  }
+
+  String get _employmentTypeHelp {
+    switch (_employmentType) {
+      case EmploymentType.fullTime:
+        return '풀타임: 고정 근무 기준으로 시급과 연차 적립률을 저장합니다. 기본 연차 적립률이 비어 있으면 0.0769h/h를 추천값으로 넣습니다.';
+      case EmploymentType.partTime:
+        return '파트타임: 실제 입력한 근무 시간에 비례해 연차를 적립합니다. 풀타임과 같은 시간당 적립률을 쓰되, 총 근무 시간이 적으면 적립도 적어집니다.';
+      case EmploymentType.casual:
+        return '캐주얼: 보통 캐주얼 로딩이 포함된 시급을 직접 입력합니다. 연차 적립은 계산에서 제외하고, payslip 연동 때 캐주얼 로딩 항목을 따로 매칭할 계획입니다.';
+    }
+  }
+
+  void _setEmploymentType(EmploymentType type) {
+    setState(() {
+      _employmentType = type;
+      if (type == EmploymentType.casual) {
+        _leaveAccrual.text = '0';
+      } else if ((double.tryParse(_leaveAccrual.text) ?? 0) == 0) {
+        _leaveAccrual.text = '0.0769';
+      }
+    });
   }
 
   List<DropdownMenuItem<int>> _weekdayItems({bool includeSameDay = false}) {
@@ -668,11 +766,16 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
     _holiday.text = preset.holiday.toStringAsFixed(2);
     _night.text = preset.night.toStringAsFixed(2);
     _taxNote = preset.note;
+    if (_employmentType != EmploymentType.casual &&
+        (double.tryParse(_leaveAccrual.text) ?? 0) == 0) {
+      _leaveAccrual.text = '0.0769';
+    }
   }
 
   void _save() {
     final newRule = PayRule(
       baseWage: double.tryParse(_baseWage.text) ?? 0,
+      employmentType: _employmentType,
       saturdayMultiplier: double.tryParse(_sat.text) ?? 1,
       sundayMultiplier: double.tryParse(_sun.text) ?? 1,
       holidayMultiplier: double.tryParse(_holiday.text) ?? 1,

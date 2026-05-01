@@ -1,9 +1,36 @@
 enum WorkType { weekday, saturday, sunday, holiday }
 
+enum EmploymentType { fullTime, partTime, casual }
+
+extension EmploymentTypeLabel on EmploymentType {
+  String get label {
+    switch (this) {
+      case EmploymentType.fullTime:
+        return 'Full-time';
+      case EmploymentType.partTime:
+        return 'Part-time';
+      case EmploymentType.casual:
+        return 'Casual';
+    }
+  }
+
+  String get shortLabel {
+    switch (this) {
+      case EmploymentType.fullTime:
+        return '풀타임';
+      case EmploymentType.partTime:
+        return '파트타임';
+      case EmploymentType.casual:
+        return '캐주얼';
+    }
+  }
+}
+
 /// Pay configuration and multipliers.
 class PayRule {
   PayRule({
     required this.baseWage,
+    this.employmentType = EmploymentType.partTime,
     this.saturdayMultiplier = 1.25,
     this.sundayMultiplier = 1.5,
     this.holidayMultiplier = 2.0,
@@ -26,6 +53,7 @@ class PayRule {
   });
 
   final double baseWage;
+  final EmploymentType employmentType;
   final double saturdayMultiplier;
   final double sundayMultiplier;
   final double holidayMultiplier;
@@ -46,8 +74,15 @@ class PayRule {
   final String taxNote;
   final DateTime? cycleAnchorDate;
 
+  bool get isCasual => employmentType == EmploymentType.casual;
+
+  double get effectiveLeaveAccrualPerHour {
+    return isCasual ? 0 : leaveAccrualPerHour;
+  }
+
   PayRule copyWith({
     double? baseWage,
+    EmploymentType? employmentType,
     double? saturdayMultiplier,
     double? sundayMultiplier,
     double? holidayMultiplier,
@@ -70,6 +105,7 @@ class PayRule {
   }) {
     return PayRule(
       baseWage: baseWage ?? this.baseWage,
+      employmentType: employmentType ?? this.employmentType,
       saturdayMultiplier: saturdayMultiplier ?? this.saturdayMultiplier,
       sundayMultiplier: sundayMultiplier ?? this.sundayMultiplier,
       holidayMultiplier: holidayMultiplier ?? this.holidayMultiplier,
@@ -96,6 +132,7 @@ class PayRule {
 
   Map<String, dynamic> toJson() => {
         'baseWage': baseWage,
+        'employmentType': employmentType.name,
         'saturdayMultiplier': saturdayMultiplier,
         'sundayMultiplier': sundayMultiplier,
         'holidayMultiplier': holidayMultiplier,
@@ -120,6 +157,7 @@ class PayRule {
   factory PayRule.fromJson(Map<String, dynamic> json) {
     return PayRule(
       baseWage: (json['baseWage'] ?? 0).toDouble(),
+      employmentType: _employmentTypeFromJson(json['employmentType']),
       saturdayMultiplier: (json['saturdayMultiplier'] ?? 1.25).toDouble(),
       sundayMultiplier: (json['sundayMultiplier'] ?? 1.5).toDouble(),
       holidayMultiplier: (json['holidayMultiplier'] ?? 2.0).toDouble(),
@@ -141,6 +179,17 @@ class PayRule {
       cycleAnchorDate: json['cycleAnchorDate'] == null
           ? null
           : DateTime.tryParse(json['cycleAnchorDate'].toString()),
+    );
+  }
+
+  static EmploymentType _employmentTypeFromJson(dynamic value) {
+    if (value is int && value >= 0 && value < EmploymentType.values.length) {
+      return EmploymentType.values[value];
+    }
+    final raw = value?.toString();
+    return EmploymentType.values.firstWhere(
+      (type) => type.name == raw,
+      orElse: () => EmploymentType.partTime,
     );
   }
 }

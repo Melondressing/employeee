@@ -34,16 +34,21 @@ class GlassCard extends StatelessWidget {
         boxShadow: blurEnabled
             ? const [
                 BoxShadow(
-                  color: Color(0x1F5D6B8C),
-                  blurRadius: 18,
-                  offset: Offset(0, 8),
+                  color: AppColors.shadowTint,
+                  blurRadius: 20,
+                  offset: Offset(0, 10),
+                ),
+                BoxShadow(
+                  color: Color(0x18FFFFFF),
+                  blurRadius: 1,
+                  offset: Offset(0, -1),
                 ),
               ]
             : const [
                 BoxShadow(
-                  color: Color(0x1A5D6B8C),
-                  blurRadius: 10,
-                  offset: Offset(0, 5),
+                  color: AppColors.shadowTint,
+                  blurRadius: 12,
+                  offset: Offset(0, 6),
                 ),
               ],
       ),

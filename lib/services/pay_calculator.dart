@@ -62,7 +62,7 @@ class PayCalculator {
         gross += nightExtra;
         breakdown['night'] = (breakdown['night'] ?? 0) + nightExtra;
       }
-      accruedLeaveHours += hours * rule.leaveAccrualPerHour;
+      accruedLeaveHours += hours * rule.effectiveLeaveAccrualPerHour;
     }
 
     final tax = gross * rule.taxRate;
@@ -122,8 +122,7 @@ class PayCalculator {
     final start = rule.cycleAnchorDate == null
         ? refDate.subtract(
             Duration(
-              days:
-                  (refDate.weekday - rule.payPeriodStartWeekday) % 7,
+              days: (refDate.weekday - rule.payPeriodStartWeekday) % 7,
             ),
           )
         : _anchoredCycleStart(refDate, rule.cycleAnchorDate!, cycleLength);

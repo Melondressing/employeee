@@ -1,16 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'screens/calculator_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
 import 'screens/paycheck_checker_screen.dart';
 import 'screens/reverse_calculator_screen.dart';
 import 'screens/rules_screen.dart';
 import 'screens/scenario_screen.dart';
 import 'screens/work_entry_form_screen.dart';
 import 'screens/work_log_screen.dart';
+import 'services/auth_service.dart';
 import 'theme/colors.dart';
+
+class AuthGate extends ConsumerWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final session = ref.watch(authSessionProvider);
+    return session == null ? const LoginScreen() : const HomeScreen();
+  }
+}
 
 class EmployeeeeApp extends StatelessWidget {
   const EmployeeeeApp({super.key});
@@ -49,19 +62,18 @@ class EmployeeeeApp extends StatelessWidget {
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: AppColors.cardSurfaceStrong,
+          fillColor: AppColors.inputSurface,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppColors.glassStroke),
+            borderSide: const BorderSide(color: AppColors.inputStroke),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppColors.glassStroke),
+            borderSide: const BorderSide(color: AppColors.inputStroke),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide:
-                const BorderSide(color: AppColors.lavender, width: 1.4),
+            borderSide: const BorderSide(color: AppColors.lavender, width: 1.4),
           ),
           labelStyle: const TextStyle(color: AppColors.softBlack),
           hintStyle: const TextStyle(color: AppColors.softBlack),
@@ -122,8 +134,9 @@ class EmployeeeeApp extends StatelessWidget {
           foregroundColor: Colors.white,
         ),
       ),
-      home: const HomeScreen(),
+      home: const AuthGate(),
       routes: {
+        LoginScreen.route: (_) => const LoginScreen(),
         RulesScreen.route: (_) => const RulesScreen(),
         WorkEntryFormScreen.route: (_) => const WorkEntryFormScreen(),
         CalculatorScreen.route: (_) => const CalculatorScreen(),
