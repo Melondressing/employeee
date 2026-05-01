@@ -75,6 +75,7 @@ class _ScenarioScreenState extends ConsumerState<ScenarioScreen> {
                   const SizedBox(height: 12),
                   Expanded(
                     child: ListView.builder(
+                      primary: true,
                       itemCount: scenarios.length,
                       itemBuilder: (_, i) {
                         final r = scenarios[i];

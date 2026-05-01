@@ -59,6 +59,7 @@ class _ReverseCalculatorScreenState
       appBar: AppBar(title: const Text('급여 역산기')),
       body: AppPage(
         child: SingleChildScrollView(
+          primary: true,
           child: GlassCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -111,6 +111,7 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
         fillHeight: true,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         child: ListView(
+          primary: true,
           padding: EdgeInsets.zero,
           children: [
             _sectionCard(

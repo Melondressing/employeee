@@ -92,6 +92,7 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
         fillHeight: true,
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
         child: ListView(
+          primary: true,
           padding: EdgeInsets.zero,
           children: [
             _section(

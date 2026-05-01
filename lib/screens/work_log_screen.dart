@@ -209,6 +209,7 @@ class WorkLogScreen extends ConsumerWidget {
                     child: GlassCard(
                       padding: const EdgeInsets.all(12),
                       child: ListView.separated(
+                        primary: true,
                         itemCount: filtered.length,
                         separatorBuilder: (_, __) => Divider(
                             height: 1,

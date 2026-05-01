@@ -53,6 +53,7 @@ class HomeScreen extends ConsumerWidget {
         fillHeight: true,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: ListView(
+          primary: true,
           padding: EdgeInsets.zero,
           children: [
             _TopSummary(

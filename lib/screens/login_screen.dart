@@ -43,6 +43,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             fillHeight: true,
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
             child: ListView(
+              primary: true,
               padding: EdgeInsets.zero,
               shrinkWrap: true,
               children: [

@@ -51,6 +51,7 @@ class CalculatorScreen extends ConsumerWidget {
                     style: TextStyle(color: AppColors.softBlack)),
               )
             : SingleChildScrollView(
+                primary: true,
                 child: GlassCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

@@ -66,6 +66,7 @@ class _PaycheckCheckerScreenState extends ConsumerState<PaycheckCheckerScreen> {
                     style: TextStyle(color: AppColors.softBlack)),
               )
             : SingleChildScrollView(
+                primary: true,
                 child: GlassCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
