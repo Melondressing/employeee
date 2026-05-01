@@ -45,9 +45,9 @@ class NavCard extends StatelessWidget {
                   Border.all(color: accent.withValues(alpha: 0.5), width: 1),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x26000000),
-                  blurRadius: 6,
-                  offset: Offset(0, 2),
+                  color: Color(0x225D6B8C),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
                 ),
               ],
             ),

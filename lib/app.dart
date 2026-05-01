@@ -18,7 +18,7 @@ class EmployeeeeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const subtleShadow = [
-      Shadow(color: Color(0x44000000), blurRadius: 2, offset: Offset(0, 1)),
+      Shadow(color: Color(0x22FFFFFF), blurRadius: 2, offset: Offset(0, 1)),
     ];
 
     return MaterialApp(
@@ -32,11 +32,11 @@ class EmployeeeeApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'SF Pro',
         colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.warmYellow,
-          primary: AppColors.warmYellow,
-          secondary: AppColors.vividOrange,
-          surface: const Color(0xFF1A120C),
-          brightness: Brightness.dark,
+          seedColor: AppColors.lavender,
+          primary: AppColors.lavender,
+          secondary: AppColors.serenityBlue,
+          surface: AppColors.offWhite,
+          brightness: Brightness.light,
         ),
         scaffoldBackgroundColor: Colors.transparent,
         cardTheme: CardThemeData(
@@ -61,7 +61,7 @@ class EmployeeeeApp extends StatelessWidget {
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
             borderSide:
-                const BorderSide(color: AppColors.vividOrange, width: 1.4),
+                const BorderSide(color: AppColors.lavender, width: 1.4),
           ),
           labelStyle: const TextStyle(color: AppColors.softBlack),
           hintStyle: const TextStyle(color: AppColors.softBlack),
@@ -69,20 +69,20 @@ class EmployeeeeApp extends StatelessWidget {
           suffixStyle: const TextStyle(color: AppColors.deepInk),
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0x9921130D),
-          foregroundColor: Colors.white,
+          backgroundColor: Color(0xA6FFFFFF),
+          foregroundColor: AppColors.deepInk,
           surfaceTintColor: Colors.transparent,
           shadowColor: Colors.transparent,
           elevation: 0,
-          iconTheme: IconThemeData(color: Colors.white),
-          actionsIconTheme: IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: AppColors.deepInk),
+          actionsIconTheme: IconThemeData(color: AppColors.deepInk),
           titleTextStyle: TextStyle(
-            color: Colors.white,
+            color: AppColors.deepInk,
             fontWeight: FontWeight.w700,
             fontSize: 20,
           ),
-          toolbarTextStyle: TextStyle(color: Colors.white),
-          systemOverlayStyle: SystemUiOverlayStyle.light,
+          toolbarTextStyle: TextStyle(color: AppColors.deepInk),
+          systemOverlayStyle: SystemUiOverlayStyle.dark,
         ),
         textTheme: const TextTheme(
           bodyMedium: TextStyle(
@@ -109,7 +109,7 @@ class EmployeeeeApp extends StatelessWidget {
         ),
         chipTheme: const ChipThemeData(
           backgroundColor: AppColors.cardSurfaceAlt,
-          selectedColor: Color(0xCC4A2D1D),
+          selectedColor: Color(0x66B4A7D6),
           labelStyle: TextStyle(color: AppColors.deepInk),
           secondaryLabelStyle: TextStyle(color: AppColors.deepInk),
           side: BorderSide(color: AppColors.glassStroke),
@@ -118,7 +118,7 @@ class EmployeeeeApp extends StatelessWidget {
           textStyle: TextStyle(color: AppColors.deepInk),
         ),
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: AppColors.vividOrange,
+          backgroundColor: AppColors.lavender,
           foregroundColor: Colors.white,
         ),
       ),

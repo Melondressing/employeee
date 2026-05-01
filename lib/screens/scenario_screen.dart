@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../services/providers.dart';
+import '../theme/colors.dart';
 import '../widgets/app_scaffold.dart';
 
 class ScenarioScreen extends ConsumerStatefulWidget {
@@ -44,14 +45,14 @@ class _ScenarioScreenState extends ConsumerState<ScenarioScreen> {
         child: entries.isEmpty
             ? const Center(
                 child: Text('근무 기록을 먼저 입력하세요.',
-                    style: TextStyle(color: Colors.white70)),
+                    style: TextStyle(color: AppColors.softBlack)),
               )
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
                     '세율과 주말·공휴 배율을 바꿔서\n“내가 규칙을 이렇게 정하면 실수령이 얼마나 달라질까?”를 보는 화면입니다.',
-                    style: TextStyle(color: Colors.white70),
+                    style: TextStyle(color: AppColors.softBlack),
                   ),
                   const SizedBox(height: 12),
                   Slider(

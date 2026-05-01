@@ -68,12 +68,12 @@ class WorkLogScreen extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.inbox_outlined,
-                      size: 48, color: Colors.white70),
+                      size: 48, color: AppColors.softBlack),
                   const SizedBox(height: 8),
                   const Text('No entries',
-                      style: TextStyle(color: Colors.white70)),
+                      style: TextStyle(color: AppColors.softBlack)),
                   const Text('Add work entries to see them here',
-                      style: TextStyle(color: Colors.white70)),
+                      style: TextStyle(color: AppColors.softBlack)),
                   const SizedBox(height: 16),
                   PeriodRangeControls(
                     from: from,

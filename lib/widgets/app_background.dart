@@ -9,11 +9,15 @@ class AppBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: const BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment(0.0, -0.2),
-          radius: 1.15,
-          colors: [Color(0xFF0C0704), Color(0xFF1A120C)],
-          stops: [0.08, 1.0],
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFF8E5E0),
+            Color(0xFFD4E4F7),
+            Color(0xFFE6DDF5),
+          ],
+          stops: [0.0, 0.52, 1.0],
         ),
       ),
       child: Stack(
@@ -23,14 +27,21 @@ class AppBackground extends StatelessWidget {
             top: 72,
             left: 28,
             child: IgnorePointer(
-              child: _blob(220, const Color(0x20F6B36C)),
+              child: _blob(220, const Color(0x66F8C7B4)),
             ),
           ),
           Positioned(
             bottom: 54,
             right: 26,
             child: IgnorePointer(
-              child: _blob(200, const Color(0x20E5A545)),
+              child: _blob(200, const Color(0x66A8DADC)),
+            ),
+          ),
+          Positioned(
+            top: 210,
+            right: -24,
+            child: IgnorePointer(
+              child: _blob(160, const Color(0x55B4A7D6)),
             ),
           ),
           child,

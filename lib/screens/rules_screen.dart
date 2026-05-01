@@ -372,21 +372,29 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
                 decoration: BoxDecoration(
                   gradient: selected
                       ? const LinearGradient(
-                          colors: [Color(0xFF5A3624), Color(0xFF3F2519)],
+                          colors: [Color(0xFFFFF4EA), Color(0xFFE6DDF5)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         )
                       : const LinearGradient(
-                          colors: [Color(0xFF342016), Color(0xFF2A1912)],
+                          colors: [Color(0xEFFFFFFF), Color(0xEAF8F3F0)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: selected
-                        ? AppColors.vividOrange
-                        : AppColors.glassStroke,
+                    color:
+                        selected ? AppColors.lavender : AppColors.glassStroke,
                   ),
+                  boxShadow: selected
+                      ? const [
+                          BoxShadow(
+                            color: Color(0x225D6B8C),
+                            blurRadius: 10,
+                            offset: Offset(0, 4),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Row(
                   children: [

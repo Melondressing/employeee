@@ -59,7 +59,7 @@ class HomeScreen extends ConsumerWidget {
               const Text(
                 'Tools',
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: AppColors.deepInk,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.3,
                 ),
@@ -86,28 +86,28 @@ class HomeScreen extends ConsumerWidget {
         subtitle: 'Currency, wage, tax rates, pay cycle, leave',
         icon: '⚙️',
         onTap: () => Navigator.pushNamed(context, RulesScreen.route),
-        bg: const Color(0xFFBE9151),
+        bg: AppColors.lavender,
       ),
       NavCard(
         title: 'Add Work Entry',
         subtitle: 'Log date, hours, break and work type',
         icon: '🕐',
         onTap: () => Navigator.pushNamed(context, WorkEntryFormScreen.route),
-        bg: const Color(0xFFD28B4A),
+        bg: AppColors.serenityBlue,
       ),
       NavCard(
         title: 'Work Log',
         subtitle: 'All entries · CSV export',
         icon: '📋',
         onTap: () => Navigator.pushNamed(context, WorkLogScreen.route),
-        bg: const Color(0xFFC38A67),
+        bg: AppColors.softRose,
       ),
       NavCard(
         title: 'Pay Calculator',
         subtitle: 'Gross · Net · per-type breakdown',
         icon: '🧮',
         onTap: () => Navigator.pushNamed(context, CalculatorScreen.route),
-        bg: const Color(0xFFD39D57),
+        bg: AppColors.mint,
       ),
       NavCard(
         title: 'Reverse Calculator',
@@ -115,14 +115,14 @@ class HomeScreen extends ConsumerWidget {
         icon: '🔄',
         onTap: () =>
             Navigator.pushNamed(context, ReverseCalculatorScreen.route),
-        bg: const Color(0xFFB87A46),
+        bg: AppColors.warmYellow,
       ),
       NavCard(
         title: 'Payslip Checker',
         subtitle: 'Compare payslip vs my calc',
         icon: '✅',
         onTap: () => Navigator.pushNamed(context, PaycheckCheckerScreen.route),
-        bg: const Color(0xFFA87346),
+        bg: AppColors.taupe,
       ),
     ];
   }
@@ -271,7 +271,11 @@ class _TopSummary extends StatelessWidget {
         return Container(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF20110B), Color(0xFF30170D), Color(0xFF3A1C10)],
+              colors: [
+                Color(0xFFB4A7D6),
+                Color(0xFF9CADCE),
+                Color(0xFFC9ADA7),
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -279,8 +283,8 @@ class _TopSummary extends StatelessWidget {
             border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x33000000),
-                blurRadius: 18,
+                color: Color(0x335D6B8C),
+                blurRadius: 22,
                 offset: Offset(0, 12),
               ),
             ],

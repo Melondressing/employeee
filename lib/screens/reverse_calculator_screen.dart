@@ -172,16 +172,15 @@ class _ReverseCalculatorScreenState
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF2D1A12), Color(0xFF1B100B)],
+          colors: [Color(0xFFFFF4EA), Color(0xFFE6DDF5)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
-        border:
-            Border.all(color: AppColors.vividOrange.withValues(alpha: 0.35)),
+        border: Border.all(color: AppColors.glassStroke),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.22),
+            color: AppColors.lavender.withValues(alpha: 0.18),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -195,7 +194,7 @@ class _ReverseCalculatorScreenState
             style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: Colors.white70,
+              color: AppColors.softBlack,
             ),
           ),
           const SizedBox(height: 6),
@@ -206,9 +205,9 @@ class _ReverseCalculatorScreenState
             style: const TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 19,
-              color: Colors.white,
+              color: AppColors.deepInk,
               shadows: [
-                Shadow(color: AppColors.accentGlow, blurRadius: 6),
+                Shadow(color: Color(0x55FFFFFF), blurRadius: 4),
               ],
             ),
           ),

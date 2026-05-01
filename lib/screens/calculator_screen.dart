@@ -47,7 +47,7 @@ class CalculatorScreen extends ConsumerWidget {
         child: entries.isEmpty
             ? const Center(
                 child: Text('근무 기록을 먼저 입력하세요.',
-                    style: TextStyle(color: Colors.white70)),
+                    style: TextStyle(color: AppColors.softBlack)),
               )
             : SingleChildScrollView(
                 child: GlassCard(
