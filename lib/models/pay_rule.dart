@@ -30,6 +30,10 @@ extension EmploymentTypeLabel on EmploymentType {
 class PayRule {
   PayRule({
     required this.baseWage,
+    this.employeeName = '',
+    this.employerName = '',
+    this.positionTitle = '',
+    this.payrollId = '',
     this.employmentType = EmploymentType.partTime,
     this.saturdayMultiplier = 1.25,
     this.sundayMultiplier = 1.5,
@@ -53,6 +57,10 @@ class PayRule {
   });
 
   final double baseWage;
+  final String employeeName;
+  final String employerName;
+  final String positionTitle;
+  final String payrollId;
   final EmploymentType employmentType;
   final double saturdayMultiplier;
   final double sundayMultiplier;
@@ -82,6 +90,10 @@ class PayRule {
 
   PayRule copyWith({
     double? baseWage,
+    String? employeeName,
+    String? employerName,
+    String? positionTitle,
+    String? payrollId,
     EmploymentType? employmentType,
     double? saturdayMultiplier,
     double? sundayMultiplier,
@@ -105,6 +117,10 @@ class PayRule {
   }) {
     return PayRule(
       baseWage: baseWage ?? this.baseWage,
+      employeeName: employeeName ?? this.employeeName,
+      employerName: employerName ?? this.employerName,
+      positionTitle: positionTitle ?? this.positionTitle,
+      payrollId: payrollId ?? this.payrollId,
       employmentType: employmentType ?? this.employmentType,
       saturdayMultiplier: saturdayMultiplier ?? this.saturdayMultiplier,
       sundayMultiplier: sundayMultiplier ?? this.sundayMultiplier,
@@ -132,6 +148,10 @@ class PayRule {
 
   Map<String, dynamic> toJson() => {
         'baseWage': baseWage,
+        'employeeName': employeeName,
+        'employerName': employerName,
+        'positionTitle': positionTitle,
+        'payrollId': payrollId,
         'employmentType': employmentType.name,
         'saturdayMultiplier': saturdayMultiplier,
         'sundayMultiplier': sundayMultiplier,
@@ -157,6 +177,10 @@ class PayRule {
   factory PayRule.fromJson(Map<String, dynamic> json) {
     return PayRule(
       baseWage: (json['baseWage'] ?? 0).toDouble(),
+      employeeName: json['employeeName']?.toString() ?? '',
+      employerName: json['employerName']?.toString() ?? '',
+      positionTitle: json['positionTitle']?.toString() ?? '',
+      payrollId: json['payrollId']?.toString() ?? '',
       employmentType: _employmentTypeFromJson(json['employmentType']),
       saturdayMultiplier: (json['saturdayMultiplier'] ?? 1.25).toDouble(),
       sundayMultiplier: (json['sundayMultiplier'] ?? 1.5).toDouble(),

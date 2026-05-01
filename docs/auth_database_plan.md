@@ -43,6 +43,10 @@ CREATE TABLE pay_rules (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL UNIQUE,
   employment_type TEXT NOT NULL DEFAULT 'partTime',
+  employee_name TEXT,
+  employer_name TEXT,
+  position_title TEXT,
+  payroll_id TEXT,
   payload_json TEXT NOT NULL,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -98,4 +102,5 @@ Payslip import should not overwrite work logs automatically at first. Safer flow
 - Login UI exists.
 - Local-only auth session exists.
 - Google/email password buttons are UI-ready but not connected to a Worker yet.
+- Basic employee/employer info is stored locally and ready to sync.
 - `PayRule.employmentType` is stored locally and ready to sync as part of `payload_json`.

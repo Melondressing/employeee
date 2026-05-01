@@ -21,6 +21,10 @@ class RulesScreen extends ConsumerStatefulWidget {
 }
 
 class _RulesScreenState extends ConsumerState<RulesScreen> {
+  late final TextEditingController _employeeName;
+  late final TextEditingController _employerName;
+  late final TextEditingController _positionTitle;
+  late final TextEditingController _payrollId;
   late final TextEditingController _baseWage;
   late final TextEditingController _sat;
   late final TextEditingController _sun;
@@ -46,6 +50,10 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
   void initState() {
     super.initState();
     final rule = ref.read(payRuleProvider);
+    _employeeName = TextEditingController(text: rule.employeeName);
+    _employerName = TextEditingController(text: rule.employerName);
+    _positionTitle = TextEditingController(text: rule.positionTitle);
+    _payrollId = TextEditingController(text: rule.payrollId);
     _baseWage = TextEditingController(text: rule.baseWage.toString());
     _sat = TextEditingController(text: rule.saturdayMultiplier.toString());
     _sun = TextEditingController(text: rule.sundayMultiplier.toString());
@@ -75,6 +83,10 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
 
   @override
   void dispose() {
+    _employeeName.dispose();
+    _employerName.dispose();
+    _positionTitle.dispose();
+    _payrollId.dispose();
     _baseWage.dispose();
     _sat.dispose();
     _sun.dispose();
@@ -112,6 +124,41 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
                     '선택: $_currency · $_country',
                     style: const TextStyle(
                         color: AppColors.softBlack, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            _sectionCard(
+              title: 'Basic Information',
+              child: Column(
+                children: [
+                  _textField(
+                    _employeeName,
+                    '내 이름',
+                    icon: Icons.badge_outlined,
+                  ),
+                  _textField(
+                    _employerName,
+                    '회사 / 사업장 이름',
+                    icon: Icons.storefront_outlined,
+                  ),
+                  _textField(
+                    _positionTitle,
+                    '직무 / 포지션',
+                    icon: Icons.work_outline,
+                  ),
+                  _textField(
+                    _payrollId,
+                    '직원번호 / Payroll ID',
+                    icon: Icons.confirmation_number_outlined,
+                  ),
+                  const Text(
+                    '이 정보는 payslip 확인과 나중에 DB 동기화할 때 기록을 구분하기 위한 기본값으로 저장됩니다.',
+                    style: TextStyle(
+                      color: AppColors.softBlack,
+                      fontSize: 12,
+                      height: 1.35,
+                    ),
                   ),
                 ],
               ),
@@ -534,6 +581,25 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
     );
   }
 
+  Widget _textField(
+    TextEditingController controller,
+    String label, {
+    IconData? icon,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: TextField(
+        controller: controller,
+        style: const TextStyle(color: AppColors.deepInk),
+        textInputAction: TextInputAction.next,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: icon == null ? null : Icon(icon),
+        ),
+      ),
+    );
+  }
+
   Widget _chipButton(String label, VoidCallback onTap) {
     final selected = _payCycleLength.text == label;
     return ChoiceChip(
@@ -775,6 +841,10 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
   void _save() {
     final newRule = PayRule(
       baseWage: double.tryParse(_baseWage.text) ?? 0,
+      employeeName: _employeeName.text.trim(),
+      employerName: _employerName.text.trim(),
+      positionTitle: _positionTitle.text.trim(),
+      payrollId: _payrollId.text.trim(),
       employmentType: _employmentType,
       saturdayMultiplier: double.tryParse(_sat.text) ?? 1,
       sundayMultiplier: double.tryParse(_sun.text) ?? 1,

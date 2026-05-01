@@ -12,6 +12,10 @@ void main() {
 
     final rule = PayRule(
       baseWage: 27,
+      employeeName: 'Minho Lee',
+      employerName: 'Cafe Example',
+      positionTitle: 'Barista',
+      payrollId: 'EMP-001',
       taxRate: 0.12,
       localTaxRate: 0.03,
       insuranceRate: 0.05,
@@ -41,6 +45,10 @@ void main() {
     final restoredEntries = await Storage.loadEntries();
 
     expect(restoredRule?.baseWage, 27);
+    expect(restoredRule?.employeeName, 'Minho Lee');
+    expect(restoredRule?.employerName, 'Cafe Example');
+    expect(restoredRule?.positionTitle, 'Barista');
+    expect(restoredRule?.payrollId, 'EMP-001');
     expect(restoredRule?.cycleAnchorDate, DateTime(2026, 4, 6));
     expect(restoredEntries, hasLength(1));
     expect(restoredEntries.first.id, 'we_a');
