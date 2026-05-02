@@ -175,6 +175,15 @@ class PayRule {
       };
 
   factory PayRule.fromJson(Map<String, dynamic> json) {
+    final country = json['country']?.toString() ?? 'Custom';
+    final taxNote = json['taxNote']?.toString() ?? '';
+    final rawHolidayMultiplier = (json['holidayMultiplier'] ?? 2.0).toDouble();
+    final holidayMultiplier = _migrateHolidayMultiplier(
+      country: country,
+      taxNote: taxNote,
+      holidayMultiplier: rawHolidayMultiplier,
+    );
+
     return PayRule(
       baseWage: (json['baseWage'] ?? 0).toDouble(),
       employeeName: json['employeeName']?.toString() ?? '',
@@ -184,7 +193,7 @@ class PayRule {
       employmentType: _employmentTypeFromJson(json['employmentType']),
       saturdayMultiplier: (json['saturdayMultiplier'] ?? 1.25).toDouble(),
       sundayMultiplier: (json['sundayMultiplier'] ?? 1.5).toDouble(),
-      holidayMultiplier: (json['holidayMultiplier'] ?? 2.0).toDouble(),
+      holidayMultiplier: holidayMultiplier,
       taxRate: (json['taxRate'] ?? 0.15).toDouble(),
       localTaxRate: (json['localTaxRate'] ?? 0.0).toDouble(),
       insuranceRate: (json['insuranceRate'] ?? 0.0).toDouble(),
@@ -198,12 +207,40 @@ class PayRule {
       payPeriodStartWeekday: json['payPeriodStartWeekday'] ?? DateTime.monday,
       paydayWeekday: json['paydayWeekday'] ?? DateTime.friday,
       leaveAccrualPerHour: (json['leaveAccrualPerHour'] ?? 0).toDouble(),
-      country: json['country'] ?? 'Custom',
-      taxNote: json['taxNote'] ?? '',
+      country: country,
+      taxNote: _migrateTaxNote(
+        country: country,
+        taxNote: taxNote,
+        holidayMultiplier: rawHolidayMultiplier,
+      ),
       cycleAnchorDate: json['cycleAnchorDate'] == null
           ? null
           : DateTime.tryParse(json['cycleAnchorDate'].toString()),
     );
+  }
+
+  static double _migrateHolidayMultiplier({
+    required String country,
+    required String taxNote,
+    required double holidayMultiplier,
+  }) {
+    final isOldAustraliaPreset = country == 'Australia' &&
+        holidayMultiplier == 2.25 &&
+        taxNote.contains('공휴 2.25');
+    return isOldAustraliaPreset ? 2.0 : holidayMultiplier;
+  }
+
+  static String _migrateTaxNote({
+    required String country,
+    required String taxNote,
+    required double holidayMultiplier,
+  }) {
+    final isOldAustraliaPreset = country == 'Australia' &&
+        holidayMultiplier == 2.25 &&
+        taxNote.contains('공휴 2.25');
+    return isOldAustraliaPreset
+        ? taxNote.replaceAll('공휴 2.25', '공휴 2.0')
+        : taxNote;
   }
 
   static EmploymentType _employmentTypeFromJson(dynamic value) {

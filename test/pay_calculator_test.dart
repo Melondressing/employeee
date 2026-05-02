@@ -121,4 +121,16 @@ void main() {
     expect(result.totalHours, 8);
     expect(result.accruedLeaveHours, 0);
   });
+
+  test('legacy Australia preset migrates public holiday to double pay', () {
+    final rule = PayRule.fromJson({
+      'baseWage': 20,
+      'country': 'Australia',
+      'holidayMultiplier': 2.25,
+      'taxNote': '호주 예시: 세율 15%, 연금/보험 10.7%, 토 1.25·일 1.5·공휴 2.25',
+    });
+
+    expect(rule.holidayMultiplier, 2.0);
+    expect(rule.taxNote, contains('공휴 2.0'));
+  });
 }

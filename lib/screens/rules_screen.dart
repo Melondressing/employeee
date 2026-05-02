@@ -730,9 +730,9 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
         insurance: 0.107,
         saturday: 1.25,
         sunday: 1.50,
-        holiday: 2.25,
+        holiday: 2.00,
         night: 1.25,
-        note: '호주 예시: 세율 15%, 연금/보험 10.7%, 토 1.25·일 1.5·공휴 2.25',
+        note: '호주 예시: 세율 15%, 연금/보험 10.7%, 토 1.25·일 1.5·공휴 2.0',
       ),
       'New Zealand': _CountryPreset(
         baseWage: 20,
