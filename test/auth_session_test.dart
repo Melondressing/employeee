@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:employeeee/models/auth_session.dart';
+import 'package:employeeee/models/work_entry.dart';
+import 'package:employeeee/services/cloud_sync_coordinator.dart';
 import 'package:employeeee/services/cloud_sync_service.dart';
 
 void main() {
@@ -65,5 +67,38 @@ void main() {
     expect(result.alreadyExported, isTrue);
     expect(result.payRunId, 7);
     expect(result.transactionId, 42);
+  });
+
+  test('cloud sync merge keeps newest local and cloud work entries', () {
+    final oldCloud = WorkEntry(
+      id: 'same',
+      date: DateTime(2026, 5, 1),
+      start: DateTime(2026, 5, 1, 9),
+      end: DateTime(2026, 5, 1, 15),
+      note: 'cloud old',
+      updatedAt: DateTime(2026, 5, 1, 10),
+    );
+    final newerLocal = oldCloud.copyWith(
+      end: DateTime(2026, 5, 1, 17),
+      note: 'local newer',
+      updatedAt: DateTime(2026, 5, 1, 11),
+    );
+    final cloudOnly = WorkEntry(
+      id: 'cloud',
+      date: DateTime(2026, 5, 2),
+      start: DateTime(2026, 5, 2, 9),
+      end: DateTime(2026, 5, 2, 17),
+      updatedAt: DateTime(2026, 5, 2, 10),
+    );
+
+    final merged = EmployeeeeCloudSyncCoordinator.mergeWorkEntries(
+      localEntries: [newerLocal],
+      cloudEntries: [oldCloud, cloudOnly],
+    );
+
+    expect(merged, hasLength(2));
+    expect(merged.first.id, 'same');
+    expect(merged.first.note, 'local newer');
+    expect(merged.last.id, 'cloud');
   });
 }

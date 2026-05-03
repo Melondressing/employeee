@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'models/auth_session.dart';
 import 'screens/calculator_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
@@ -14,15 +17,42 @@ import 'screens/scenario_screen.dart';
 import 'screens/work_entry_form_screen.dart';
 import 'screens/work_log_screen.dart';
 import 'services/auth_service.dart';
+import 'services/cloud_sync_coordinator.dart';
 import 'theme/colors.dart';
 
-class AuthGate extends ConsumerWidget {
+class AuthGate extends ConsumerStatefulWidget {
   const AuthGate({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends ConsumerState<AuthGate> {
+  String? _lastCloudSyncKey;
+
+  @override
+  Widget build(BuildContext context) {
     final session = ref.watch(authSessionProvider);
+    _scheduleCloudSync(session);
     return session == null ? const LoginScreen() : const HomeScreen();
+  }
+
+  void _scheduleCloudSync(AuthSession? session) {
+    if (session == null || !session.hasCloudToken) {
+      _lastCloudSyncKey = null;
+      return;
+    }
+
+    final key = '${session.provider}:${session.userId}:${session.accessToken}';
+    if (_lastCloudSyncKey == key) return;
+    _lastCloudSyncKey = key;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        EmployeeeeCloudSyncCoordinator.sync(ref, session).catchError((_) {}),
+      );
+    });
   }
 }
 

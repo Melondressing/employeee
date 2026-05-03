@@ -4,8 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/auth_session.dart';
 import '../services/auth_service.dart';
-import '../services/cloud_sync_service.dart';
-import '../services/providers.dart';
+import '../services/cloud_sync_coordinator.dart';
 import '../theme/colors.dart';
 import '../widgets/app_background.dart';
 import '../widgets/app_page.dart';
@@ -323,7 +322,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             );
       }
 
-      await _syncEmployeeeeCloud(session);
+      await EmployeeeeCloudSyncCoordinator.sync(ref, session);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -343,34 +342,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
-    }
-  }
-
-  Future<void> _syncEmployeeeeCloud(AuthSession session) async {
-    final cloudApi = ref.read(employeeCloudApiProvider);
-    final localRule = ref.read(payRuleProvider);
-    final localEntries = ref.read(workEntriesProvider);
-    final cloud = await cloudApi.fetchBootstrap(session);
-
-    final nextRule = cloud.payRule ?? localRule;
-    final nextEntries =
-        cloud.workEntries.isEmpty ? localEntries : cloud.workEntries;
-
-    await ref.read(payRuleProvider.notifier).update(
-          nextRule,
-          syncCloud: false,
-        );
-    await ref.read(workEntriesProvider.notifier).replaceAll(
-          nextEntries,
-          syncCloud: false,
-        );
-
-    if (cloud.payRule == null || cloud.workEntries.isEmpty) {
-      await cloudApi.sync(
-        session: session,
-        payRule: nextRule,
-        workEntries: nextEntries,
-      );
     }
   }
 }
