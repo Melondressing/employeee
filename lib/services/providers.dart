@@ -95,7 +95,7 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
   Future<void> add(WorkEntry entry) async {
     state = [...state, entry];
     await Storage.saveEntries(state);
-    _syncCloud(state);
+    _syncCloudEntry(entry);
   }
 
   Future<void> update(WorkEntry updated) async {
@@ -104,13 +104,13 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
         if (entry.id == updated.id) updated else entry,
     ];
     await Storage.saveEntries(state);
-    _syncCloud(state);
+    _syncCloudEntry(updated);
   }
 
   Future<void> remove(WorkEntry entry) async {
     state = state.where((e) => e.id != entry.id).toList();
     await Storage.saveEntries(state);
-    _syncCloud(state);
+    _deleteCloudEntry(entry);
   }
 
   Future<void> replaceAll(
@@ -148,7 +148,7 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
         .toList();
     state = [...state, ...copied];
     await Storage.saveEntries(state);
-    _syncCloud(state);
+    _syncCloudEntries(copied);
     return copied;
   }
 
@@ -160,6 +160,36 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
       _ref
           .read(employeeCloudApiProvider)
           .saveWorkEntries(session: session, workEntries: entries)
+          .catchError((_) {}),
+    );
+  }
+
+  void _syncCloudEntries(List<WorkEntry> entries) {
+    for (final entry in entries) {
+      _syncCloudEntry(entry);
+    }
+  }
+
+  void _syncCloudEntry(WorkEntry entry) {
+    final session = _ref.read(authSessionProvider);
+    if (session == null || !session.hasCloudToken) return;
+
+    unawaited(
+      _ref
+          .read(employeeCloudApiProvider)
+          .saveWorkEntry(session: session, workEntry: entry)
+          .catchError((_) {}),
+    );
+  }
+
+  void _deleteCloudEntry(WorkEntry entry) {
+    final session = _ref.read(authSessionProvider);
+    if (session == null || !session.hasCloudToken) return;
+
+    unawaited(
+      _ref
+          .read(employeeCloudApiProvider)
+          .deleteWorkEntry(session: session, workEntry: entry)
           .catchError((_) {}),
     );
   }

@@ -29,6 +29,13 @@ class AuthGate extends ConsumerStatefulWidget {
 
 class _AuthGateState extends ConsumerState<AuthGate> {
   String? _lastCloudSyncKey;
+  Timer? _cloudRefreshTimer;
+
+  @override
+  void dispose() {
+    _cloudRefreshTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,19 +47,32 @@ class _AuthGateState extends ConsumerState<AuthGate> {
   void _scheduleCloudSync(AuthSession? session) {
     if (session == null || !session.hasCloudToken) {
       _lastCloudSyncKey = null;
+      _cloudRefreshTimer?.cancel();
+      _cloudRefreshTimer = null;
       return;
     }
 
     final key = '${session.provider}:${session.userId}:${session.accessToken}';
     if (_lastCloudSyncKey == key) return;
     _lastCloudSyncKey = key;
+    _cloudRefreshTimer?.cancel();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      unawaited(
-        EmployeeeeCloudSyncCoordinator.sync(ref, session).catchError((_) {}),
-      );
+      _runCloudSync(session);
     });
+
+    _cloudRefreshTimer = Timer.periodic(
+      const Duration(seconds: 45),
+      (_) => _runCloudSync(session),
+    );
+  }
+
+  void _runCloudSync(AuthSession session) {
+    if (!mounted || !session.hasCloudToken) return;
+    unawaited(
+      EmployeeeeCloudSyncCoordinator.sync(ref, session).catchError((_) {}),
+    );
   }
 }
 

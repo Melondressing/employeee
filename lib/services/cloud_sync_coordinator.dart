@@ -29,6 +29,7 @@ class EmployeeeeCloudSyncCoordinator {
       final nextEntries = mergeWorkEntries(
         localEntries: localEntries,
         cloudEntries: cloud.workEntries,
+        deletedEntries: cloud.deletedEntries,
       );
 
       await ref.read(payRuleProvider.notifier).update(
@@ -53,10 +54,19 @@ class EmployeeeeCloudSyncCoordinator {
   static List<WorkEntry> mergeWorkEntries({
     required List<WorkEntry> localEntries,
     required List<WorkEntry> cloudEntries,
+    List<DeletedWorkEntry> deletedEntries = const [],
   }) {
     final byId = <String, WorkEntry>{};
+    final deletedById = {
+      for (final deletion in deletedEntries) deletion.entryId: deletion,
+    };
 
     for (final entry in [...cloudEntries, ...localEntries]) {
+      final deletion = deletedById[entry.id];
+      if (deletion != null && !entry.updatedAt.isAfter(deletion.deletedAt)) {
+        continue;
+      }
+
       final existing = byId[entry.id];
       if (existing == null || entry.updatedAt.isAfter(existing.updatedAt)) {
         byId[entry.id] = entry;

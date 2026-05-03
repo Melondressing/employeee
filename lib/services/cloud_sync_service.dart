@@ -77,6 +77,39 @@ class EmployeeCloudApi {
     _decodeResponse(response);
   }
 
+  Future<void> saveWorkEntry({
+    required AuthSession session,
+    required WorkEntry workEntry,
+  }) async {
+    final response = await http
+        .put(
+          _uri(
+            session,
+            '/api/employeeee/work-entries/${Uri.encodeComponent(workEntry.id)}',
+          ),
+          headers: _headers(session),
+          body: jsonEncode({'work_entry': workEntry.toJson()}),
+        )
+        .timeout(const Duration(seconds: 12));
+    _decodeResponse(response);
+  }
+
+  Future<void> deleteWorkEntry({
+    required AuthSession session,
+    required WorkEntry workEntry,
+  }) async {
+    final response = await http
+        .delete(
+          _uri(
+            session,
+            '/api/employeeee/work-entries/${Uri.encodeComponent(workEntry.id)}',
+          ),
+          headers: _headers(session),
+        )
+        .timeout(const Duration(seconds: 12));
+    _decodeResponse(response);
+  }
+
   Future<BudgetExportResult> exportPayRunToBudget({
     required AuthSession session,
     required Map<String, dynamic> payload,
@@ -174,16 +207,20 @@ class EmployeeCloudBootstrap {
   const EmployeeCloudBootstrap({
     required this.payRule,
     required this.workEntries,
+    required this.deletedEntries,
   });
 
   final PayRule? payRule;
   final List<WorkEntry> workEntries;
+  final List<DeletedWorkEntry> deletedEntries;
 
-  bool get isEmpty => payRule == null && workEntries.isEmpty;
+  bool get isEmpty =>
+      payRule == null && workEntries.isEmpty && deletedEntries.isEmpty;
 
   factory EmployeeCloudBootstrap.fromJson(Map<String, dynamic> json) {
     final rawRule = json['pay_rule'];
     final rawEntries = json['work_entries'];
+    final rawDeletedEntries = json['deleted_entries'];
 
     return EmployeeCloudBootstrap(
       payRule: rawRule is Map
@@ -201,6 +238,41 @@ class EmployeeCloudBootstrap {
               )
               .toList()
           : const [],
+      deletedEntries: rawDeletedEntries is List
+          ? rawDeletedEntries
+              .whereType<Map>()
+              .map(
+                (entry) => DeletedWorkEntry.fromJson(
+                  entry.map((key, value) => MapEntry(key.toString(), value)),
+                ),
+              )
+              .where((entry) => entry.entryId.isNotEmpty)
+              .toList()
+          : const [],
     );
+  }
+}
+
+class DeletedWorkEntry {
+  const DeletedWorkEntry({
+    required this.entryId,
+    required this.deletedAt,
+  });
+
+  final String entryId;
+  final DateTime deletedAt;
+
+  factory DeletedWorkEntry.fromJson(Map<String, dynamic> json) {
+    return DeletedWorkEntry(
+      entryId: (json['entry_id'] ?? json['entryId'] ?? '').toString(),
+      deletedAt: _parseDeletedAt(json['deleted_at'] ?? json['deletedAt']),
+    );
+  }
+
+  static DateTime _parseDeletedAt(Object? value) {
+    final raw = value?.toString() ?? '';
+    return DateTime.tryParse(raw) ??
+        DateTime.tryParse(raw.replaceFirst(' ', 'T')) ??
+        DateTime.fromMillisecondsSinceEpoch(0);
   }
 }

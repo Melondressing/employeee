@@ -49,12 +49,20 @@ void main() {
           'note': 'cloud',
         }
       ],
+      'deleted_entries': [
+        {
+          'entry_id': 'we_deleted',
+          'deleted_at': '2026-05-03 10:00:00',
+        }
+      ],
     });
 
     expect(bootstrap.payRule?.baseWage, 31);
     expect(bootstrap.workEntries, hasLength(1));
     expect(bootstrap.workEntries.first.id, 'we_cloud');
     expect(bootstrap.workEntries.first.paidHours, 7.5);
+    expect(bootstrap.deletedEntries, hasLength(1));
+    expect(bootstrap.deletedEntries.first.entryId, 'we_deleted');
   });
 
   test('budget export result parses transaction ids', () {
@@ -100,5 +108,28 @@ void main() {
     expect(merged.first.id, 'same');
     expect(merged.first.note, 'local newer');
     expect(merged.last.id, 'cloud');
+  });
+
+  test('cloud sync merge respects delete tombstones from another device', () {
+    final staleLocal = WorkEntry(
+      id: 'deleted',
+      date: DateTime(2026, 5, 1),
+      start: DateTime(2026, 5, 1, 9),
+      end: DateTime(2026, 5, 1, 17),
+      updatedAt: DateTime(2026, 5, 1, 9),
+    );
+
+    final merged = EmployeeeeCloudSyncCoordinator.mergeWorkEntries(
+      localEntries: [staleLocal],
+      cloudEntries: const [],
+      deletedEntries: [
+        DeletedWorkEntry(
+          entryId: 'deleted',
+          deletedAt: DateTime(2026, 5, 1, 10),
+        ),
+      ],
+    );
+
+    expect(merged, isEmpty);
   });
 }
