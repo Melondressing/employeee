@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/auth_session.dart';
 import '../services/auth_service.dart';
+import '../services/cloud_sync_service.dart';
+import '../services/providers.dart';
 import '../theme/colors.dart';
 import '../widgets/app_background.dart';
 import '../widgets/app_page.dart';
@@ -306,18 +308,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _isSubmitting = true);
     try {
+      late final AuthSession session;
       if (_isRegister) {
-        await ref.read(authSessionProvider.notifier).registerSharedAccount(
-              username: username,
-              password: password,
-              displayName: displayName,
-            );
+        session =
+            await ref.read(authSessionProvider.notifier).registerSharedAccount(
+                  username: username,
+                  password: password,
+                  displayName: displayName,
+                );
       } else {
-        await ref.read(authSessionProvider.notifier).signInWithEmail(
+        session = await ref.read(authSessionProvider.notifier).signInWithEmail(
               email: username,
               password: password,
             );
       }
+
+      await _syncEmployeeeeCloud(session);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -337,6 +343,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  Future<void> _syncEmployeeeeCloud(AuthSession session) async {
+    final cloudApi = ref.read(employeeCloudApiProvider);
+    final localRule = ref.read(payRuleProvider);
+    final localEntries = ref.read(workEntriesProvider);
+    final cloud = await cloudApi.fetchBootstrap(session);
+
+    final nextRule = cloud.payRule ?? localRule;
+    final nextEntries =
+        cloud.workEntries.isEmpty ? localEntries : cloud.workEntries;
+
+    await ref.read(payRuleProvider.notifier).update(
+          nextRule,
+          syncCloud: false,
+        );
+    await ref.read(workEntriesProvider.notifier).replaceAll(
+          nextEntries,
+          syncCloud: false,
+        );
+
+    if (cloud.payRule == null || cloud.workEntries.isEmpty) {
+      await cloudApi.sync(
+        session: session,
+        payRule: nextRule,
+        workEntries: nextEntries,
+      );
     }
   }
 }

@@ -41,7 +41,7 @@ class AuthSessionNotifier extends StateNotifier<AuthSession?> {
     await AuthStorage.saveSession(session);
   }
 
-  Future<void> signInWithEmail({
+  Future<AuthSession> signInWithEmail({
     required String email,
     required String password,
   }) async {
@@ -51,9 +51,10 @@ class AuthSessionNotifier extends StateNotifier<AuthSession?> {
     );
     state = session;
     await AuthStorage.saveSession(session);
+    return session;
   }
 
-  Future<void> registerSharedAccount({
+  Future<AuthSession> registerSharedAccount({
     required String username,
     required String password,
     required String displayName,
@@ -65,6 +66,7 @@ class AuthSessionNotifier extends StateNotifier<AuthSession?> {
     );
     state = session;
     await AuthStorage.saveSession(session);
+    return session;
   }
 
   Future<void> signOut() async {
