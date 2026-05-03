@@ -43,6 +43,17 @@ class Storage {
     await prefs.setString(_entriesKey, jsonEncode(list));
   }
 
+  static Future<bool> hasLocalWorkData() async {
+    final data = await loadBootstrap();
+    return data.hasAnyData;
+  }
+
+  static Future<void> clearWorkData() async {
+    final prefs = await _prefs;
+    await prefs.remove(_ruleKey);
+    await prefs.remove(_entriesKey);
+  }
+
   static Future<List<WorkEntry>> loadEntries() async {
     final prefs = await _prefs;
     return _decodeEntries(prefs.getString(_entriesKey));
@@ -118,4 +129,6 @@ class StorageBootstrapData {
 
   final PayRule? rule;
   final List<WorkEntry> entries;
+
+  bool get hasAnyData => rule != null || entries.isNotEmpty;
 }

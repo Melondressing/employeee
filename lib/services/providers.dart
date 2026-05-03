@@ -42,7 +42,9 @@ class PayRuleNotifier extends StateNotifier<PayRule> {
 
   Future<void> update(PayRule rule, {bool syncCloud = true}) async {
     state = rule;
-    await Storage.saveRule(rule);
+    if (_shouldPersistLocal) {
+      await Storage.saveRule(rule);
+    }
     if (syncCloud) _syncCloud(rule);
   }
 
@@ -56,6 +58,11 @@ class PayRuleNotifier extends StateNotifier<PayRule> {
           .savePayRule(session: session, payRule: rule)
           .catchError((_) {}),
     );
+  }
+
+  bool get _shouldPersistLocal {
+    final session = _ref.read(authSessionProvider);
+    return session == null || session.isLocalOnly;
   }
 }
 
@@ -94,7 +101,9 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
 
   Future<void> add(WorkEntry entry) async {
     state = [...state, entry];
-    await Storage.saveEntries(state);
+    if (_shouldPersistLocal) {
+      await Storage.saveEntries(state);
+    }
     _syncCloudEntry(entry);
   }
 
@@ -103,13 +112,17 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
       for (final entry in state)
         if (entry.id == updated.id) updated else entry,
     ];
-    await Storage.saveEntries(state);
+    if (_shouldPersistLocal) {
+      await Storage.saveEntries(state);
+    }
     _syncCloudEntry(updated);
   }
 
   Future<void> remove(WorkEntry entry) async {
     state = state.where((e) => e.id != entry.id).toList();
-    await Storage.saveEntries(state);
+    if (_shouldPersistLocal) {
+      await Storage.saveEntries(state);
+    }
     _deleteCloudEntry(entry);
   }
 
@@ -118,7 +131,9 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
     bool syncCloud = true,
   }) async {
     state = entries;
-    await Storage.saveEntries(state);
+    if (_shouldPersistLocal) {
+      await Storage.saveEntries(state);
+    }
     if (syncCloud) _syncCloud(state);
   }
 
@@ -147,7 +162,9 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
         )
         .toList();
     state = [...state, ...copied];
-    await Storage.saveEntries(state);
+    if (_shouldPersistLocal) {
+      await Storage.saveEntries(state);
+    }
     _syncCloudEntries(copied);
     return copied;
   }
@@ -192,6 +209,11 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
           .deleteWorkEntry(session: session, workEntry: entry)
           .catchError((_) {}),
     );
+  }
+
+  bool get _shouldPersistLocal {
+    final session = _ref.read(authSessionProvider);
+    return session == null || session.isLocalOnly;
   }
 }
 

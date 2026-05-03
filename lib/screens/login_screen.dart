@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/auth_session.dart';
 import '../services/auth_service.dart';
 import '../services/cloud_sync_coordinator.dart';
+import '../services/storage.dart';
 import '../theme/colors.dart';
 import '../widgets/app_background.dart';
 import '../widgets/app_page.dart';
@@ -307,6 +308,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _isSubmitting = true);
     try {
+      final importDeviceData = _isRegister && await Storage.hasLocalWorkData()
+          ? await _confirmDeviceDataImport()
+          : false;
+      if (!mounted) return;
+
       late final AuthSession session;
       if (_isRegister) {
         session =
@@ -322,12 +328,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             );
       }
 
-      await EmployeeeeCloudSyncCoordinator.sync(ref, session);
+      await EmployeeeeCloudSyncCoordinator.sync(
+        ref,
+        session,
+        includeDeviceData: importDeviceData,
+        clearDeviceDataAfterUpload: importDeviceData,
+      );
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_isRegister ? '공통 계정을 만들었어요.' : '로그인했어요.'),
+          content: Text(
+            importDeviceData
+                ? '공통 계정을 만들고 기기 데이터를 DB에 연동했어요.'
+                : _isRegister
+                    ? '공통 계정을 만들었어요.'
+                    : '로그인했어요.',
+          ),
         ),
       );
     } on AuthException catch (error) {
@@ -343,6 +360,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  Future<bool> _confirmDeviceDataImport() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('기기 저장 데이터를 연동할까요?'),
+          content: const Text(
+            '현재 이 기기에 저장된 급여 규칙/근무기록이 있어요. 공통 계정 DB로 옮기면 휴대폰과 데스크탑에서 같은 데이터를 볼 수 있고, 옮긴 뒤 이 기기의 로컬 급여 데이터는 정리됩니다.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('연동 안 함'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('DB에 연동'),
+            ),
+          ],
+        );
+      },
+    );
+    return result == true;
   }
 }
 
