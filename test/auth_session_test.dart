@@ -54,4 +54,16 @@ void main() {
     expect(bootstrap.workEntries.first.id, 'we_cloud');
     expect(bootstrap.workEntries.first.paidHours, 7.5);
   });
+
+  test('budget export result parses transaction ids', () {
+    final result = BudgetExportResult.fromJson({
+      'already_exported': true,
+      'pay_run_id': '7',
+      'transaction_id': 42,
+    });
+
+    expect(result.alreadyExported, isTrue);
+    expect(result.payRunId, 7);
+    expect(result.transactionId, 42);
+  });
 }

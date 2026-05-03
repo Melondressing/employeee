@@ -9,6 +9,8 @@ import 'package:share_plus/share_plus.dart';
 import '../models/pay_result.dart';
 import '../models/pay_rule.dart';
 import '../models/work_entry.dart';
+import '../services/auth_service.dart';
+import '../services/cloud_sync_service.dart';
 import '../services/pay_calculator.dart';
 import '../services/providers.dart';
 import '../theme/colors.dart';
@@ -26,6 +28,7 @@ class PayHistoryScreen extends ConsumerStatefulWidget {
 
 class _PayHistoryScreenState extends ConsumerState<PayHistoryScreen> {
   _HistoryMode _mode = _HistoryMode.cycle;
+  String? _exportingRunKey;
 
   @override
   Widget build(BuildContext context) {
@@ -108,6 +111,12 @@ class _PayHistoryScreenState extends ConsumerState<PayHistoryScreen> {
                     rule: rule,
                     formatter: formatter,
                   ),
+                  onExportBudget: () => _exportBudget(
+                    summary: summary,
+                    rule: rule,
+                    formatter: formatter,
+                  ),
+                  isExporting: _exportingRunKey == _runKey(summary),
                 ),
               ),
             ),
@@ -230,6 +239,89 @@ class _PayHistoryScreenState extends ConsumerState<PayHistoryScreen> {
       subject: 'employeeee 급여 기록 ${formatter.format(summary.result.net)}',
     );
   }
+
+  Future<void> _exportBudget({
+    required _PayHistorySummary summary,
+    required PayRule rule,
+    required NumberFormat formatter,
+  }) async {
+    final session = ref.read(authSessionProvider);
+
+    if (session == null || !session.hasCloudToken) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Budget-Lee에 보내려면 공통 계정 로그인이 필요해요.')),
+      );
+      return;
+    }
+    if (summary.entryCount == 0 || summary.result.net <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('보낼 급여 기록이나 실수령 금액이 없어요.')),
+      );
+      return;
+    }
+
+    final runKey = _runKey(summary);
+    setState(() => _exportingRunKey = runKey);
+    try {
+      final result =
+          await ref.read(employeeCloudApiProvider).exportPayRunToBudget(
+                session: session,
+                payload: _budgetPayload(summary: summary, rule: rule),
+              );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result.alreadyExported
+                ? '이미 Budget-Lee에 저장된 급여예요. 거래 #${result.transactionId ?? '-'}'
+                : 'Budget-Lee 수입 거래로 저장했어요. ${formatter.format(summary.result.net)}',
+          ),
+        ),
+      );
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Budget-Lee로 급여를 보내지 못했어요.')),
+      );
+    } finally {
+      if (mounted) setState(() => _exportingRunKey = null);
+    }
+  }
+
+  Map<String, dynamic> _budgetPayload({
+    required _PayHistorySummary summary,
+    required PayRule rule,
+  }) {
+    final period = '${_d(summary.periodStart)} ~ ${_d(summary.periodEnd)}';
+    final employer = rule.employerName.trim();
+
+    return {
+      'run_key': _runKey(summary),
+      'summary_mode': summary.kind.name,
+      'period_start': _d(summary.periodStart),
+      'period_end': _d(summary.periodEnd),
+      'payday': _d(summary.postedDate),
+      'currency': rule.currency,
+      'gross': summary.result.gross,
+      'deductions': summary.result.tax,
+      'net': summary.result.net,
+      'hours': summary.result.totalHours,
+      'entry_count': summary.entryCount,
+      'category': '급여',
+      'description':
+          employer.isEmpty ? 'employeeee 급여 $period' : '$employer 급여 $period',
+      'employment_type': rule.employmentType.name,
+      'employee_name': rule.employeeName,
+      'employer_name': rule.employerName,
+      'payroll_id': rule.payrollId,
+    };
+  }
 }
 
 class _HistoryHeader extends StatelessWidget {
@@ -318,12 +410,16 @@ class _HistoryCard extends StatelessWidget {
     required this.formatter,
     required this.mode,
     required this.onShareBudgetDraft,
+    required this.onExportBudget,
+    required this.isExporting,
   });
 
   final _PayHistorySummary summary;
   final NumberFormat formatter;
   final _HistoryMode mode;
   final VoidCallback onShareBudgetDraft;
+  final VoidCallback onExportBudget;
+  final bool isExporting;
 
   @override
   Widget build(BuildContext context) {
@@ -407,13 +503,29 @@ class _HistoryCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: onShareBudgetDraft,
-              icon: const Icon(Icons.outbox_outlined, size: 18),
-              label: const Text('Budget 보내기 초안'),
-            ),
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 6,
+            runSpacing: 4,
+            children: [
+              TextButton.icon(
+                onPressed: onShareBudgetDraft,
+                icon: const Icon(Icons.ios_share_outlined, size: 18),
+                label: const Text('공유 초안'),
+              ),
+              FilledButton.icon(
+                onPressed: isExporting ? null : onExportBudget,
+                icon: isExporting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.account_balance_wallet_outlined,
+                        size: 18),
+                label: Text(isExporting ? '저장 중' : 'Budget 저장'),
+              ),
+            ],
           ),
         ],
       ),
@@ -601,3 +713,7 @@ bool _sameDay(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;
 
 String _d(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
+
+String _runKey(_PayHistorySummary summary) {
+  return '${summary.kind.name}:${_d(summary.periodStart)}:${_d(summary.periodEnd)}:${_d(summary.postedDate)}';
+}

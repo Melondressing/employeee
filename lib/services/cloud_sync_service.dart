@@ -77,6 +77,23 @@ class EmployeeCloudApi {
     _decodeResponse(response);
   }
 
+  Future<BudgetExportResult> exportPayRunToBudget({
+    required AuthSession session,
+    required Map<String, dynamic> payload,
+  }) async {
+    final response = await http
+        .post(
+          _uri(session, '/api/employeeee/pay-runs/export-budget'),
+          headers: _headers(session),
+          body: jsonEncode(payload),
+        )
+        .timeout(const Duration(seconds: 12));
+
+    final body = _decodeResponse(response);
+    final data = _jsonMap(body['data']);
+    return BudgetExportResult.fromJson(data);
+  }
+
   Uri _uri(AuthSession session, String path) {
     final baseUrl = (session.apiBaseUrl?.isNotEmpty == true)
         ? session.apiBaseUrl!
@@ -123,6 +140,33 @@ class EmployeeCloudApi {
       return value.map((key, value) => MapEntry(key.toString(), value));
     }
     return const {};
+  }
+}
+
+class BudgetExportResult {
+  const BudgetExportResult({
+    required this.alreadyExported,
+    required this.payRunId,
+    required this.transactionId,
+  });
+
+  final bool alreadyExported;
+  final int? payRunId;
+  final int? transactionId;
+
+  factory BudgetExportResult.fromJson(Map<String, dynamic> json) {
+    return BudgetExportResult(
+      alreadyExported: json['already_exported'] == true,
+      payRunId: _parseInt(json['pay_run_id']),
+      transactionId: _parseInt(json['transaction_id']),
+    );
+  }
+
+  static int? _parseInt(Object? value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
   }
 }
 
