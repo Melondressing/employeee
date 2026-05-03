@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/auth_session.dart';
@@ -18,13 +19,17 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _email = TextEditingController();
+  final _username = TextEditingController();
+  final _displayName = TextEditingController();
   final _password = TextEditingController();
   bool _obscure = true;
+  bool _isRegister = false;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
-    _email.dispose();
+    _username.dispose();
+    _displayName.dispose();
     _password.dispose();
     super.dispose();
   }
@@ -82,8 +87,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 8),
                 Text(
                   session == null
-                      ? '지금은 기기 저장 모드로 안전하게 이어가고,\n다음 단계에서 Cloudflare D1 동기화를 붙일 수 있게 준비해뒀어요.'
-                      : '${session.displayName} workspace\n${session.email}',
+                      ? 'Budget-Lee와 같은 계정으로 로그인하면\n나중에 급여 → 가계부 연동까지 자연스럽게 이어집니다.'
+                      : '${session.displayName} workspace\n${session.username.isEmpty ? session.email : session.username}',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: AppColors.softBlack,
@@ -121,22 +126,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             label: const Text('Google 로그인 연결 예정'),
           ),
           const SizedBox(height: 12),
+          SegmentedButton<bool>(
+            segments: const [
+              ButtonSegment(value: false, label: Text('로그인')),
+              ButtonSegment(value: true, label: Text('회원가입')),
+            ],
+            selected: {_isRegister},
+            onSelectionChanged: _isSubmitting
+                ? null
+                : (selection) => setState(() => _isRegister = selection.first),
+          ),
+          const SizedBox(height: 12),
           TextField(
-            controller: _email,
-            keyboardType: TextInputType.emailAddress,
-            autofillHints: const [AutofillHints.email],
+            controller: _username,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.username],
             decoration: const InputDecoration(
-              labelText: '아이디 / 이메일',
+              labelText: 'Budget-Lee 아이디',
               prefixIcon: Icon(Icons.alternate_email),
             ),
           ),
+          if (_isRegister) ...[
+            const SizedBox(height: 10),
+            TextField(
+              controller: _displayName,
+              textInputAction: TextInputAction.next,
+              autofillHints: const [AutofillHints.name],
+              decoration: const InputDecoration(
+                labelText: '이름 / 표시 이름',
+                prefixIcon: Icon(Icons.badge_outlined),
+              ),
+            ),
+          ],
           const SizedBox(height: 10),
           TextField(
             controller: _password,
             obscureText: _obscure,
+            keyboardType: TextInputType.number,
+            maxLength: 4,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(4),
+            ],
             autofillHints: const [AutofillHints.password],
             decoration: InputDecoration(
-              labelText: '비밀번호',
+              labelText: '비밀번호 4자리',
+              counterText: '',
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
                 onPressed: () => setState(() => _obscure = !_obscure),
@@ -155,11 +190,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            onPressed: _signInEmailPreview,
-            child: const Text(
-              '이메일 방식으로 시작',
-              style: TextStyle(fontWeight: FontWeight.w800),
-            ),
+            onPressed: _isSubmitting ? null : _submitSharedAccount,
+            child: _isSubmitting
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(
+                    _isRegister ? '공통 계정 만들기' : '공통 계정으로 로그인',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
           ),
           const SizedBox(height: 10),
           TextButton(
@@ -169,7 +210,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
           const SizedBox(height: 4),
           const Text(
-            '현재 이메일/비밀번호 화면은 DB 연결 전 준비 단계입니다. 실제 비밀번호 검증은 Worker API 연결 후 활성화돼요.',
+            'Budget-Lee와 같은 인증 API를 사용합니다. 같은 아이디로 두 앱을 함께 쓸 수 있어요.',
             textAlign: TextAlign.center,
             style: TextStyle(color: AppColors.softBlack, fontSize: 12),
           ),
@@ -186,10 +227,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         children: [
           _PlanRow(
             icon: Icons.person_outline,
-            title: session.isLocalOnly ? '기기 저장 모드' : '클라우드 동기화',
+            title: session.isLocalOnly ? '기기 저장 모드' : '공통 계정 연결됨',
             subtitle: session.isLocalOnly
                 ? '이 기기/브라우저에만 저장됩니다.'
-                : 'D1 데이터베이스와 동기화됩니다.',
+                : 'Budget-Lee Auth API를 통해 같은 사용자로 인식됩니다.',
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
@@ -209,7 +250,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'DB 연결 예정 구조',
+            '공통 계정 구조',
             style: TextStyle(
               color: AppColors.deepInk,
               fontSize: 16,
@@ -219,18 +260,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           SizedBox(height: 10),
           _PlanRow(
             icon: Icons.cloud_outlined,
-            title: 'Cloudflare Worker API',
-            subtitle: 'Flutter 앱은 API만 호출하고, DB 토큰은 서버에 숨깁니다.',
+            title: 'Budget-Lee Auth API',
+            subtitle: '회원가입/로그인은 같은 users 테이블을 사용합니다.',
           ),
           _PlanRow(
             icon: Icons.storage_outlined,
-            title: 'D1 tables',
-            subtitle: 'users, sessions, pay_rules, work_entries로 분리합니다.',
+            title: 'employeeee 데이터 분리 예정',
+            subtitle: 'pay_rules, work_entries는 같은 user_id 아래 별도 테이블로 붙입니다.',
           ),
           _PlanRow(
             icon: Icons.sync_outlined,
-            title: '기존 기록 이전',
-            subtitle: '첫 로그인 때 로컬 근무기록을 사용자 DB로 업로드합니다.',
+            title: 'Budget 앱 연동',
+            subtitle: '급여 확정 시 지급일 기준 income 거래로 보낼 수 있게 연결합니다.',
           ),
         ],
       ),
@@ -245,19 +286,58 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Future<void> _signInEmailPreview() async {
-    final email = _email.text.trim();
+  Future<void> _submitSharedAccount() async {
+    final username = _username.text.trim();
     final password = _password.text.trim();
-    if (!email.contains('@') || password.length < 4) {
+    final displayName = _displayName.text.trim();
+
+    if (username.isEmpty || password.length != 4) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('이메일과 4자 이상 비밀번호를 입력해주세요.')),
+        const SnackBar(content: Text('아이디와 숫자 4자리 비밀번호를 입력해주세요.')),
       );
       return;
     }
-    await ref.read(authSessionProvider.notifier).signInWithEmail(
-          email: email,
-          password: password,
-        );
+    if (_isRegister && displayName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('회원가입에는 표시 이름이 필요해요.')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    try {
+      if (_isRegister) {
+        await ref.read(authSessionProvider.notifier).registerSharedAccount(
+              username: username,
+              password: password,
+              displayName: displayName,
+            );
+      } else {
+        await ref.read(authSessionProvider.notifier).signInWithEmail(
+              email: username,
+              password: password,
+            );
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_isRegister ? '공통 계정을 만들었어요.' : '로그인했어요.'),
+        ),
+      );
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('로그인 서버에 연결하지 못했어요.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 }
 
