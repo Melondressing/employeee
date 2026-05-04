@@ -216,6 +216,7 @@ class WorkLogScreen extends ConsumerWidget {
                             color: Colors.white.withValues(alpha: 0.12)),
                         itemBuilder: (_, i) {
                           final e = filtered[filtered.length - 1 - i];
+                          final isDayOff = e.type == WorkType.dayOff;
                           return ListTile(
                             contentPadding: EdgeInsets.zero,
                             title: Text(
@@ -228,7 +229,9 @@ class WorkLogScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '시간 ${e.paidHours.toStringAsFixed(2)}h | ${_h(e.start)} ~ ${_h(e.end)} | 휴게 ${e.breakMinutes}분',
+                                  isDayOff
+                                      ? '휴무 · 급여 계산 제외'
+                                      : '시간 ${e.paidHours.toStringAsFixed(2)}h | ${_h(e.start)} ~ ${_h(e.end)} | 휴게 ${e.breakMinutes}분',
                                   style: const TextStyle(
                                       color: AppColors.softBlack),
                                 ),
@@ -315,6 +318,8 @@ class WorkLogScreen extends ConsumerWidget {
         return '일';
       case WorkType.holiday:
         return '공휴';
+      case WorkType.dayOff:
+        return '휴무';
     }
   }
 

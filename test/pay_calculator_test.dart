@@ -122,6 +122,33 @@ void main() {
     expect(result.accruedLeaveHours, 0);
   });
 
+  test('day off entries are stored but excluded from pay and leave accrual',
+      () {
+    final calc = PayCalculator();
+    final rule = PayRule(
+      baseWage: 30,
+      taxRate: 0,
+      localTaxRate: 0,
+      insuranceRate: 0,
+      leaveAccrualPerHour: 0.0769,
+    );
+    final dayOff = WorkEntry(
+      date: DateTime(2026, 5, 2),
+      start: DateTime(2026, 5, 2),
+      end: DateTime(2026, 5, 2),
+      type: WorkType.dayOff,
+    );
+
+    final restored = WorkEntry.fromJson(dayOff.toJson());
+    final result = calc.calculate(entries: [restored], rule: rule);
+
+    expect(restored.type, WorkType.dayOff);
+    expect(restored.paidHours, 0);
+    expect(result.totalHours, 0);
+    expect(result.gross, 0);
+    expect(result.accruedLeaveHours, 0);
+  });
+
   test('legacy Australia preset migrates public holiday to double pay', () {
     final rule = PayRule.fromJson({
       'baseWage': 20,

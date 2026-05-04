@@ -220,41 +220,37 @@ class _HomeMonthCalendar extends StatelessWidget {
     }).toList();
     final totalHours =
         monthEntries.fold<double>(0, (sum, entry) => sum + entry.paidHours);
-    final workedDays = monthEntries.map((entry) => _dayKey(entry.date)).toSet();
+    final workedDays = monthEntries
+        .where((entry) => entry.type != WorkType.dayOff && entry.paidHours > 0)
+        .map((entry) => _dayKey(entry.date))
+        .toSet();
 
     return GlassCard(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${month.month}월 근무 달력',
-                      style: const TextStyle(
-                        color: AppColors.deepInk,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '월 ${totalHours.toStringAsFixed(1)}h · 근무 ${workedDays.length}일',
-                      style: const TextStyle(
-                        color: AppColors.softBlack,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const _MiniLegend(),
-            ],
+          Text(
+            '${month.month}월 근무 달력',
+            style: const TextStyle(
+              color: AppColors.deepInk,
+              fontWeight: FontWeight.w900,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '월 ${totalHours.toStringAsFixed(1)}h · 근무 ${workedDays.length}일',
+            style: const TextStyle(
+              color: AppColors.softBlack,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 7),
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: _MiniLegend(),
           ),
           const SizedBox(height: 10),
           _CalendarHeader(startsSunday: startsSunday),
@@ -381,7 +377,11 @@ class _CalendarDayCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final today = _sameDate(date, DateTime.now());
-    final dotColors = _dotColors(entries, isInMonth: isInMonth);
+    final dotColors = _dotColors(
+      entries,
+      date: date,
+      isInMonth: isInMonth,
+    );
 
     return InkWell(
       borderRadius: BorderRadius.circular(10),
@@ -475,8 +475,10 @@ class _MiniLegend extends StatelessWidget {
       alignment: WrapAlignment.end,
       children: [
         _LegendDot(label: '근무', color: _CalendarColors.work),
-        _LegendDot(label: 'Off', color: _CalendarColors.dayOff),
+        _LegendDot(label: '휴무', color: _CalendarColors.dayOff),
         _LegendDot(label: '공휴', color: _CalendarColors.holiday),
+        _LegendDot(label: '야간', color: _CalendarColors.night),
+        _LegendDot(label: '미입력', color: _CalendarColors.unrecorded),
       ],
     );
   }
@@ -531,6 +533,8 @@ class _CalendarColors {
   static const dayOff = Color(0xFF5A9DEE);
   static const holiday = Color(0xFFE6A0B4);
   static const night = Color(0xFF9C7FE8);
+  static const unrecorded = Color(0xFF9AA6B2);
+  static const future = Color(0xFFD5DBE3);
 }
 
 class _HomeAppBarTitle extends StatelessWidget {
@@ -942,18 +946,35 @@ Map<int, List<WorkEntry>> _entriesByDay(List<WorkEntry> entries) {
   return grouped;
 }
 
-List<Color> _dotColors(List<WorkEntry> entries, {required bool isInMonth}) {
+List<Color> _dotColors(
+  List<WorkEntry> entries, {
+  required DateTime date,
+  required bool isInMonth,
+}) {
   if (!isInMonth) return const [];
-  if (entries.isEmpty) return const [_CalendarColors.dayOff];
+  if (entries.isEmpty) {
+    final today = _dateOnly(DateTime.now());
+    final day = _dateOnly(date);
+    return [
+      day.isAfter(today) ? _CalendarColors.future : _CalendarColors.unrecorded,
+    ];
+  }
 
   final colors = <Color>[];
   for (final entry in entries) {
-    final color = entry.isNight
-        ? _CalendarColors.night
-        : entry.type == WorkType.holiday
-            ? _CalendarColors.holiday
-            : _CalendarColors.work;
-    if (!colors.contains(color)) colors.add(color);
+    if (entry.type == WorkType.dayOff) {
+      if (!colors.contains(_CalendarColors.dayOff)) {
+        colors.add(_CalendarColors.dayOff);
+      }
+      continue;
+    }
+    final typeColor = entry.type == WorkType.holiday
+        ? _CalendarColors.holiday
+        : _CalendarColors.work;
+    if (!colors.contains(typeColor)) colors.add(typeColor);
+    if (entry.isNight && !colors.contains(_CalendarColors.night)) {
+      colors.add(_CalendarColors.night);
+    }
   }
   return colors.isEmpty ? const [_CalendarColors.work] : colors;
 }

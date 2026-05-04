@@ -38,6 +38,7 @@ class PayCalculator {
 
     for (final e in filtered) {
       final hours = e.paidHours;
+      if (e.type == WorkType.dayOff) continue;
       totalHours += hours;
       final multiplier = _multiplierFor(e, rule);
       final line = hours * rule.baseWage * multiplier;
@@ -55,6 +56,8 @@ class PayCalculator {
           break;
         case WorkType.holiday:
           breakdown['holiday'] = (breakdown['holiday'] ?? 0) + line;
+          break;
+        case WorkType.dayOff:
           break;
       }
       if (e.isNight) {
@@ -109,6 +112,8 @@ class PayCalculator {
         return rule.sundayMultiplier;
       case WorkType.holiday:
         return rule.holidayMultiplier;
+      case WorkType.dayOff:
+        return 0;
     }
   }
 

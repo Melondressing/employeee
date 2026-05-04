@@ -1,4 +1,4 @@
-enum WorkType { weekday, saturday, sunday, holiday }
+enum WorkType { weekday, saturday, sunday, holiday, dayOff }
 
 enum EmploymentType { fullTime, partTime, casual }
 

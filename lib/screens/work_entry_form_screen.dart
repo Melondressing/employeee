@@ -88,6 +88,7 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
       return !day.isBefore(weekStart) && !day.isAfter(weekEnd);
     }).toList()
       ..sort((a, b) => a.start.compareTo(b.start));
+    final isDayOff = _type == WorkType.dayOff;
 
     return AppScaffold(
       appBar: AppBar(
@@ -106,50 +107,54 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
                 children: [
                   _dateControls(formatter),
                   const SizedBox(height: 12),
-                  _presetSection(),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _timeControl(
-                          label: '시작',
-                          time: _start,
-                          onPick: (picked) =>
-                              setState(() => _start = _roundTo15(picked)),
-                          onAdjust: (minutes) => setState(
-                            () => _start = _adjustTime(_start, minutes),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _timeControl(
-                          label: '종료',
-                          time: _end,
-                          onPick: (picked) =>
-                              setState(() => _end = _roundTo15(picked)),
-                          onAdjust: (minutes) => setState(
-                            () => _end = _adjustTime(_end, minutes),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  _breakSelector(),
-                  const SizedBox(height: 12),
                   _typeSelector(),
-                  SwitchListTile(
-                    value: _isNight,
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    activeThumbColor: AppColors.vividOrange,
-                    title: const Text(
-                      '야간 근무 배율 적용',
-                      style: TextStyle(color: AppColors.deepInk),
+                  const SizedBox(height: 12),
+                  if (isDayOff)
+                    _dayOffNotice()
+                  else ...[
+                    _presetSection(),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _timeControl(
+                            label: '시작',
+                            time: _start,
+                            onPick: (picked) =>
+                                setState(() => _start = _roundTo15(picked)),
+                            onAdjust: (minutes) => setState(
+                              () => _start = _adjustTime(_start, minutes),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _timeControl(
+                            label: '종료',
+                            time: _end,
+                            onPick: (picked) =>
+                                setState(() => _end = _roundTo15(picked)),
+                            onAdjust: (minutes) => setState(
+                              () => _end = _adjustTime(_end, minutes),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    onChanged: (value) => setState(() => _isNight = value),
-                  ),
+                    const SizedBox(height: 12),
+                    _breakSelector(),
+                    SwitchListTile(
+                      value: _isNight,
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      activeThumbColor: AppColors.vividOrange,
+                      title: const Text(
+                        '야간 근무 배율 적용',
+                        style: TextStyle(color: AppColors.deepInk),
+                      ),
+                      onChanged: (value) => setState(() => _isNight = value),
+                    ),
+                  ],
                   TextField(
                     controller: _noteCtrl,
                     decoration: const InputDecoration(labelText: '메모'),
@@ -353,6 +358,7 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
       (WorkType.saturday, '토'),
       (WorkType.sunday, '일'),
       (WorkType.holiday, '공휴'),
+      (WorkType.dayOff, '휴무'),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,6 +386,10 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
                 setState(() {
                   _type = item.$1;
                   _typeTouched = true;
+                  if (_type == WorkType.dayOff) {
+                    _breakMinutes = 0;
+                    _isNight = false;
+                  }
                 });
               },
             );
@@ -389,7 +399,43 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
     );
   }
 
+  Widget _dayOffNotice() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.serenityBlue.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.serenityBlue.withValues(alpha: 0.45),
+        ),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.beach_access_outlined, color: AppColors.deepInk),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              '휴무로 저장됩니다. 급여, 총 근무시간, 연차 적립 계산에는 포함되지 않아요.',
+              style: TextStyle(
+                color: AppColors.deepInk,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _payPreview(dynamic tempPay) {
+    if (_type == WorkType.dayOff) {
+      return const Text(
+        '휴무는 달력 표시용으로 저장되고 급여 계산에는 들어가지 않습니다.',
+        style: TextStyle(color: AppColors.softBlack),
+      );
+    }
     if (tempPay == null) {
       return const Text(
         '종료 시간이 시작 시간보다 빠르면 다음날 퇴근으로 계산합니다.',
@@ -521,18 +567,23 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
   }
 
   Widget _entryTile(WorkEntry entry, DateFormat formatter) {
+    final isDayOff = entry.type == WorkType.dayOff;
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
       title: Text(
-        '${formatter.format(entry.date)} ${_formatTimeOfDate(entry.start)}-${_formatTimeOfDate(entry.end)}',
+        isDayOff
+            ? '${formatter.format(entry.date)} 휴무'
+            : '${formatter.format(entry.date)} ${_formatTimeOfDate(entry.start)}-${_formatTimeOfDate(entry.end)}',
         style: const TextStyle(
           color: AppColors.deepInk,
           fontWeight: FontWeight.w800,
         ),
       ),
       subtitle: Text(
-        '${_typeLabel(entry.type)} · ${entry.paidHours.toStringAsFixed(2)}h · 휴게 ${entry.breakMinutes}분${entry.note.isEmpty ? '' : ' · ${entry.note}'}',
+        isDayOff
+            ? '${_typeLabel(entry.type)} · 급여 계산 제외${entry.note.isEmpty ? '' : ' · ${entry.note}'}'
+            : '${_typeLabel(entry.type)} · ${entry.paidHours.toStringAsFixed(2)}h · 휴게 ${entry.breakMinutes}분${entry.note.isEmpty ? '' : ' · ${entry.note}'}',
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(color: AppColors.softBlack),
@@ -692,6 +743,11 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
   }
 
   WorkEntry? _buildTempEntry() {
+    if (_type == WorkType.dayOff) {
+      final day = _dateOnly(_date);
+      return _buildEntry(date: day, start: day, end: day);
+    }
+
     final startDate = DateTime(
       _date.year,
       _date.month,
@@ -775,27 +831,34 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
     required DateTime end,
   }) {
     final existing = widget.entry;
+    final isDayOff = _type == WorkType.dayOff;
+    final normalizedDate = _dateOnly(date);
+    final normalizedStart = isDayOff ? normalizedDate : start;
+    final normalizedEnd = isDayOff ? normalizedDate : end;
+    final normalizedBreak = isDayOff ? 0 : _breakMinutes;
+    final normalizedNight = isDayOff ? false : _isNight;
+
     if (existing != null) {
       return existing.copyWith(
-        date: date,
-        start: start,
-        end: end,
-        breakMinutes: _breakMinutes,
+        date: normalizedDate,
+        start: normalizedStart,
+        end: normalizedEnd,
+        breakMinutes: normalizedBreak,
         type: _type,
         note: _noteCtrl.text,
-        isNight: _isNight,
+        isNight: normalizedNight,
         leaveHoursUsed: existing.leaveHoursUsed,
       );
     }
 
     return WorkEntry(
-      date: date,
-      start: start,
-      end: end,
-      breakMinutes: _breakMinutes,
+      date: normalizedDate,
+      start: normalizedStart,
+      end: normalizedEnd,
+      breakMinutes: normalizedBreak,
       type: _type,
       note: _noteCtrl.text,
-      isNight: _isNight,
+      isNight: normalizedNight,
       leaveHoursUsed: 0,
     );
   }
@@ -841,6 +904,8 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
         return '일요일';
       case WorkType.holiday:
         return '공휴일';
+      case WorkType.dayOff:
+        return '휴무';
     }
   }
 }

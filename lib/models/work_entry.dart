@@ -31,8 +31,10 @@ class WorkEntry {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  double get paidHours =>
-      end.difference(start).inMinutes / 60 - breakMinutes / 60.0;
+  double get paidHours {
+    if (type == WorkType.dayOff) return 0;
+    return end.difference(start).inMinutes / 60 - breakMinutes / 60.0;
+  }
 
   WorkEntry copyWith({
     String? id,
@@ -89,7 +91,7 @@ class WorkEntry {
       start: start,
       end: end,
       breakMinutes: json['breakMinutes'] ?? 0,
-      type: WorkType.values[json['type'] ?? 0],
+      type: _workTypeFromJson(json['type']),
       note: json['note'] ?? '',
       isNight: json['isNight'] ?? false,
       leaveHoursUsed: (json['leaveHoursUsed'] ?? 0).toDouble(),
@@ -109,5 +111,18 @@ class WorkEntry {
       return DateTime.tryParse(value);
     }
     return null;
+  }
+
+  static WorkType _workTypeFromJson(Object? value) {
+    if (value is String) {
+      return WorkType.values.firstWhere(
+        (type) => type.name == value,
+        orElse: () => WorkType.weekday,
+      );
+    }
+    if (value is int && value >= 0 && value < WorkType.values.length) {
+      return WorkType.values[value];
+    }
+    return WorkType.weekday;
   }
 }
