@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/auth_session.dart';
 import '../services/auth_service.dart';
 import '../services/cloud_sync_coordinator.dart';
+import '../services/providers.dart';
 import '../services/storage.dart';
 import '../theme/colors.dart';
 import '../widgets/app_background.dart';
@@ -240,6 +241,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             icon: const Icon(Icons.logout),
             label: const Text('로그아웃'),
           ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.danger,
+              side: BorderSide(color: AppColors.danger.withValues(alpha: 0.5)),
+            ),
+            onPressed: _isSubmitting ? null : () => _deleteAccount(session),
+            icon: const Icon(Icons.delete_forever_outlined),
+            label: Text(session.isLocalOnly ? '기기 데이터 제거' : '계정 영구 삭제'),
+          ),
         ],
       ),
     );
@@ -386,6 +397,121 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       },
     );
     return result == true;
+  }
+
+  Future<void> _deleteAccount(AuthSession session) async {
+    final confirmed = await _confirmAccountDeletion(session);
+    if (!confirmed || !mounted) return;
+
+    setState(() => _isSubmitting = true);
+    try {
+      await ref.read(authSessionProvider.notifier).deleteAccount();
+      await Storage.clearWorkData();
+      ref.read(payRuleProvider.notifier).resetInMemory();
+      ref.read(workEntriesProvider.notifier).resetInMemory();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            session.isLocalOnly
+                ? '이 기기의 저장 데이터가 제거되었습니다.'
+                : '계정과 연결 데이터가 삭제되었습니다.',
+          ),
+        ),
+      );
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('계정 삭제 요청에 실패했어요. 잠시 후 다시 시도해주세요.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  Future<bool> _confirmAccountDeletion(AuthSession session) async {
+    final first = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(session.isLocalOnly ? '기기 데이터를 제거할까요?' : '계정을 삭제할까요?'),
+          content: Text(
+            session.isLocalOnly
+                ? '이 기기에 저장된 급여 규칙과 근무기록이 삭제됩니다. 다른 기기나 서버에는 영향이 없습니다.'
+                : 'Budget-Lee 공통 계정과 employeeee 근무기록, 급여 규칙, Budget-Lee 데이터가 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('취소'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.danger,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('계속'),
+            ),
+          ],
+        );
+      },
+    );
+    if (first != true || !mounted) return false;
+
+    final input = TextEditingController();
+    try {
+      final second = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('마지막 확인'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('삭제를 진행하려면 아래 칸에 “삭제”라고 입력해주세요.'),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: input,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    labelText: '확인 문구',
+                    hintText: '삭제',
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('취소'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.danger,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () =>
+                    Navigator.pop(context, input.text.trim() == '삭제'),
+                child: const Text('삭제'),
+              ),
+            ],
+          );
+        },
+      );
+      return second == true;
+    } finally {
+      input.dispose();
+    }
   }
 }
 

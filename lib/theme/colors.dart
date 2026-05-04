@@ -16,6 +16,7 @@ class AppColors {
   static const deepInk = Color(0xFF374151);
   static const softBlack = Color(0xFF5D697C);
   static const offWhite = Color(0xFFFDF9F4);
+  static const danger = Color(0xFFB85C5C);
 
   static const cardSurface = Color(0xF8FFFFFF);
   static const cardSurfaceStrong = Color(0xFFFFFCFA);

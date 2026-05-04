@@ -64,6 +64,10 @@ class PayRuleNotifier extends StateNotifier<PayRule> {
     final session = _ref.read(authSessionProvider);
     return session == null || session.isLocalOnly;
   }
+
+  void resetInMemory() {
+    state = PayRule(baseWage: 25);
+  }
 }
 
 final workEntriesProvider =
@@ -214,6 +218,10 @@ class WorkEntriesNotifier extends StateNotifier<List<WorkEntry>> {
   bool get _shouldPersistLocal {
     final session = _ref.read(authSessionProvider);
     return session == null || session.isLocalOnly;
+  }
+
+  void resetInMemory() {
+    state = const [];
   }
 }
 

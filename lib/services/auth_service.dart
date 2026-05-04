@@ -78,6 +78,26 @@ class AuthSessionNotifier extends StateNotifier<AuthSession?> {
     await AuthStorage.clearSession();
   }
 
+  Future<void> deleteAccount() async {
+    final session = state;
+    if (session == null) return;
+
+    if (session.isLocalOnly) {
+      state = null;
+      await AuthStorage.clearSession();
+      return;
+    }
+
+    final token = session.accessToken;
+    if (token == null || token.isEmpty) {
+      throw const AuthException('계정 삭제에는 다시 로그인이 필요해요.');
+    }
+
+    await _apiClient.deleteAccount(token);
+    state = null;
+    await AuthStorage.clearSession();
+  }
+
   Future<void> _verifyCloudSession() async {
     final session = state;
     if (session == null || !session.hasCloudToken) return;
@@ -218,6 +238,17 @@ class AuthApiClient {
     } catch (_) {
       // Local sign-out should not be blocked by a transient network failure.
     }
+  }
+
+  Future<void> deleteAccount(String token) async {
+    final response = await http.delete(
+      _uri('/api/account/delete'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    ).timeout(const Duration(seconds: 12));
+    _decodeResponse(response);
   }
 
   Future<Map<String, dynamic>> _postJson(
