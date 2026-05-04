@@ -14,6 +14,7 @@ import 'screens/paycheck_checker_screen.dart';
 import 'screens/reverse_calculator_screen.dart';
 import 'screens/rules_screen.dart';
 import 'screens/scenario_screen.dart';
+import 'screens/work_calendar_screen.dart';
 import 'screens/work_entry_form_screen.dart';
 import 'screens/work_log_screen.dart';
 import 'services/auth_service.dart';
@@ -195,6 +196,7 @@ class EmployeeeeApp extends StatelessWidget {
         ReverseCalculatorScreen.route: (_) => const ReverseCalculatorScreen(),
         PaycheckCheckerScreen.route: (_) => const PaycheckCheckerScreen(),
         ScenarioScreen.route: (_) => const ScenarioScreen(),
+        WorkCalendarScreen.route: (_) => const WorkCalendarScreen(),
         WorkLogScreen.route: (_) => const WorkLogScreen(),
       },
     );

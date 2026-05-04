@@ -14,6 +14,7 @@ import 'pay_history_screen.dart';
 import 'paycheck_checker_screen.dart';
 import 'reverse_calculator_screen.dart';
 import 'rules_screen.dart';
+import 'work_calendar_screen.dart';
 import 'work_entry_form_screen.dart';
 import 'work_log_screen.dart';
 
@@ -137,6 +138,13 @@ class HomeScreen extends ConsumerWidget {
         icon: '📋',
         onTap: () => Navigator.pushNamed(context, WorkLogScreen.route),
         bg: AppColors.softRose,
+      ),
+      NavCard(
+        title: 'Work Calendar',
+        subtitle: 'Monthly shifts · day off · weekly hours',
+        icon: '🗓️',
+        onTap: () => Navigator.pushNamed(context, WorkCalendarScreen.route),
+        bg: AppColors.serenityBlue,
       ),
       NavCard(
         title: 'Pay History',

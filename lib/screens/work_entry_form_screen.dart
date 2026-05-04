@@ -12,10 +12,11 @@ import '../widgets/app_scaffold.dart';
 import '../widgets/glass_card.dart';
 
 class WorkEntryFormScreen extends ConsumerStatefulWidget {
-  const WorkEntryFormScreen({super.key, this.entry});
+  const WorkEntryFormScreen({super.key, this.entry, this.initialDate});
   static const route = '/work-entry';
 
   final WorkEntry? entry;
+  final DateTime? initialDate;
 
   @override
   ConsumerState<WorkEntryFormScreen> createState() =>
@@ -41,6 +42,10 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
     super.initState();
     final entry = widget.entry;
     if (entry == null) {
+      final initialDate = widget.initialDate;
+      if (initialDate != null) {
+        _date = DateTime(initialDate.year, initialDate.month, initialDate.day);
+      }
       _type = _defaultTypeForDate(_date);
       return;
     }
