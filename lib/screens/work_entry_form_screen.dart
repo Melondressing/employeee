@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../models/pay_rule.dart';
 import '../models/work_entry.dart';
+import '../services/language_service.dart';
 import '../services/providers.dart';
 import '../theme/colors.dart';
 import '../widgets/app_date_picker.dart';
@@ -68,6 +69,7 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final language = ref.watch(appLanguageProvider);
     final formatter = DateFormat('yyyy-MM-dd');
     final entries = ref.watch(workEntriesProvider);
     final rule = ref.watch(payRuleProvider);
@@ -92,7 +94,11 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
 
     return AppScaffold(
       appBar: AppBar(
-        title: Text(isEditing ? '근무 기록 수정' : '근무 기록 입력'),
+        title: Text(
+          isEditing
+              ? language.text('근무 기록 수정', 'Edit work entry')
+              : language.text('근무 기록 입력', 'Add work entry'),
+        ),
       ),
       body: AppPage(
         fillHeight: true,
@@ -118,7 +124,7 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
                       children: [
                         Expanded(
                           child: _timeControl(
-                            label: '시작',
+                            label: language.text('시작', 'Start'),
                             time: _start,
                             onPick: (picked) =>
                                 setState(() => _start = _roundTo15(picked)),
@@ -130,7 +136,7 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: _timeControl(
-                            label: '종료',
+                            label: language.text('종료', 'End'),
                             time: _end,
                             onPick: (picked) =>
                                 setState(() => _end = _roundTo15(picked)),
@@ -148,16 +154,18 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
                       dense: true,
                       contentPadding: EdgeInsets.zero,
                       activeThumbColor: AppColors.vividOrange,
-                      title: const Text(
-                        '야간 근무 배율 적용',
-                        style: TextStyle(color: AppColors.deepInk),
+                      title: Text(
+                        language.text('야간 근무 배율 적용', 'Apply night rate'),
+                        style: const TextStyle(color: AppColors.deepInk),
                       ),
                       onChanged: (value) => setState(() => _isNight = value),
                     ),
                   ],
                   TextField(
                     controller: _noteCtrl,
-                    decoration: const InputDecoration(labelText: '메모'),
+                    decoration: InputDecoration(
+                      labelText: language.text('메모', 'Note'),
+                    ),
                     style: const TextStyle(color: AppColors.deepInk),
                   ),
                   const SizedBox(height: 12),
@@ -178,13 +186,14 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
   }
 
   Widget _dateControls(DateFormat formatter) {
+    final language = ref.watch(appLanguageProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
             IconButton(
-              tooltip: '전날',
+              tooltip: language.text('전날', 'Previous day'),
               onPressed: () =>
                   _setDate(_date.subtract(const Duration(days: 1))),
               icon: const Icon(Icons.chevron_left, color: AppColors.deepInk),
@@ -200,7 +209,7 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
                 onPressed: _pickDate,
                 icon: const Icon(Icons.calendar_today_outlined, size: 18),
                 label: Text(
-                  '${formatter.format(_date)} (${_weekdayLabel(_date.weekday)})',
+                  _dateWithWeekday(_date, formatter, language),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontWeight: FontWeight.w800),
@@ -208,7 +217,7 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
               ),
             ),
             IconButton(
-              tooltip: '다음날',
+              tooltip: language.text('다음날', 'Next day'),
               onPressed: () => _setDate(_date.add(const Duration(days: 1))),
               icon: const Icon(Icons.chevron_right, color: AppColors.deepInk),
             ),
@@ -219,17 +228,17 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
           children: [
             TextButton(
               onPressed: () => _setDate(DateTime.now()),
-              child: const Text('오늘'),
+              child: Text(language.text('오늘', 'Today')),
             ),
             TextButton(
               onPressed: () =>
                   _setDate(DateTime.now().subtract(const Duration(days: 1))),
-              child: const Text('어제'),
+              child: Text(language.text('어제', 'Yesterday')),
             ),
             TextButton(
               onPressed: () =>
                   _setDate(DateTime.now().add(const Duration(days: 1))),
-              child: const Text('내일'),
+              child: Text(language.text('내일', 'Tomorrow')),
             ),
           ],
         ),
@@ -238,12 +247,13 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
   }
 
   Widget _presetSection() {
+    final language = ref.watch(appLanguageProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '자주 쓰는 시간',
-          style: TextStyle(
+        Text(
+          language.text('자주 쓰는 시간', 'Quick presets'),
+          style: const TextStyle(
             color: AppColors.deepInk,
             fontWeight: FontWeight.w800,
           ),
@@ -259,7 +269,8 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
                 const TimeOfDay(hour: 22, minute: 0), 30, false),
             _presetChip('10-6 야간', const TimeOfDay(hour: 22, minute: 0),
                 const TimeOfDay(hour: 6, minute: 0), 30, true),
-            _presetChip('휴게 없음', _start, _end, 0, _isNight),
+            _presetChip(
+                language.text('휴게 없음', 'No break'), _start, _end, 0, _isNight),
           ],
         ),
       ],
@@ -272,6 +283,7 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
     required ValueChanged<TimeOfDay> onPick,
     required ValueChanged<int> onAdjust,
   }) {
+    final language = ref.watch(appLanguageProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -286,7 +298,7 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
           child: Row(
             children: [
               IconButton(
-                tooltip: '$label 15분 전',
+                tooltip: language.text('$label 15분 전', '$label -15 min'),
                 onPressed: () => onAdjust(-15),
                 icon: const Icon(Icons.remove, size: 18),
               ),
@@ -303,7 +315,7 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
                 ),
               ),
               IconButton(
-                tooltip: '$label 15분 후',
+                tooltip: language.text('$label 15분 후', '$label +15 min'),
                 onPressed: () => onAdjust(15),
                 icon: const Icon(Icons.add, size: 18),
               ),
@@ -315,11 +327,12 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
   }
 
   Widget _breakSelector() {
+    final language = ref.watch(appLanguageProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '휴게시간: $_breakMinutes 분',
+          language.text('휴게시간: $_breakMinutes 분', 'Break: $_breakMinutes min'),
           style: const TextStyle(
             color: AppColors.deepInk,
             fontWeight: FontWeight.w700,
@@ -338,7 +351,7 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
           runSpacing: 8,
           children: [0, 15, 30, 45, 60].map((minutes) {
             return ChoiceChip(
-              label: Text('$minutes분'),
+              label: Text(language.text('$minutes분', '${minutes}m')),
               selected: _breakMinutes == minutes,
               backgroundColor: AppColors.cardSurfaceAlt,
               selectedColor: AppColors.vividOrange.withValues(alpha: 0.3),
@@ -353,19 +366,20 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
   }
 
   Widget _typeSelector() {
+    final language = ref.watch(appLanguageProvider);
     final items = [
-      (WorkType.weekday, '평일'),
-      (WorkType.saturday, '토'),
-      (WorkType.sunday, '일'),
-      (WorkType.holiday, '공휴'),
-      (WorkType.dayOff, '휴무'),
+      (WorkType.weekday, language.text('평일', 'Weekday')),
+      (WorkType.saturday, language.text('토', 'Sat')),
+      (WorkType.sunday, language.text('일', 'Sun')),
+      (WorkType.holiday, language.text('공휴', 'Holiday')),
+      (WorkType.dayOff, language.text('휴무', 'Day off')),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '근무 유형',
-          style: TextStyle(
+        Text(
+          language.text('근무 유형', 'Work type'),
+          style: const TextStyle(
             color: AppColors.deepInk,
             fontWeight: FontWeight.w700,
           ),
@@ -400,6 +414,7 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
   }
 
   Widget _dayOffNotice() {
+    final language = ref.watch(appLanguageProvider);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
@@ -410,15 +425,18 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
           color: AppColors.serenityBlue.withValues(alpha: 0.45),
         ),
       ),
-      child: const Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.beach_access_outlined, color: AppColors.deepInk),
-          SizedBox(width: 10),
+          const Icon(Icons.beach_access_outlined, color: AppColors.deepInk),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
-              '휴무로 저장됩니다. 급여, 총 근무시간, 연차 적립 계산에는 포함되지 않아요.',
-              style: TextStyle(
+              language.text(
+                '휴무로 저장됩니다. 급여, 총 근무시간, 연차 적립 계산에는 포함되지 않아요.',
+                'Saved as a day off. It will not count toward pay, total hours, or leave accrual.',
+              ),
+              style: const TextStyle(
                 color: AppColors.deepInk,
                 fontWeight: FontWeight.w700,
               ),
@@ -430,16 +448,23 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
   }
 
   Widget _payPreview(dynamic tempPay) {
+    final language = ref.watch(appLanguageProvider);
     if (_type == WorkType.dayOff) {
-      return const Text(
-        '휴무는 달력 표시용으로 저장되고 급여 계산에는 들어가지 않습니다.',
-        style: TextStyle(color: AppColors.softBlack),
+      return Text(
+        language.text(
+          '휴무는 달력 표시용으로 저장되고 급여 계산에는 들어가지 않습니다.',
+          'Day off is saved for calendar visibility and excluded from pay calculations.',
+        ),
+        style: const TextStyle(color: AppColors.softBlack),
       );
     }
     if (tempPay == null) {
-      return const Text(
-        '종료 시간이 시작 시간보다 빠르면 다음날 퇴근으로 계산합니다.',
-        style: TextStyle(color: AppColors.softBlack),
+      return Text(
+        language.text(
+          '종료 시간이 시작 시간보다 빠르면 다음날 퇴근으로 계산합니다.',
+          'If the end time is earlier than the start time, it is treated as next-day finish.',
+        ),
+        style: const TextStyle(color: AppColors.softBlack),
       );
     }
     return Container(
@@ -451,7 +476,10 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
         border: Border.all(color: AppColors.glassStroke),
       ),
       child: Text(
-        '예상 일급 세전 ${tempPay.gross.toStringAsFixed(2)} · 세후 ${tempPay.net.toStringAsFixed(2)} · ${tempPay.totalHours.toStringAsFixed(2)}h',
+        language.text(
+          '예상 일급 세전 ${tempPay.gross.toStringAsFixed(2)} · 세후 ${tempPay.net.toStringAsFixed(2)} · ${tempPay.totalHours.toStringAsFixed(2)}h',
+          'Estimated day pay gross ${tempPay.gross.toStringAsFixed(2)} · net ${tempPay.net.toStringAsFixed(2)} · ${tempPay.totalHours.toStringAsFixed(2)}h',
+        ),
         style: const TextStyle(
           color: AppColors.deepInk,
           fontWeight: FontWeight.w800,
@@ -461,13 +489,14 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
   }
 
   Widget _saveButtons(bool isEditing) {
+    final language = ref.watch(appLanguageProvider);
     if (isEditing) {
       return SizedBox(
         width: double.infinity,
         child: FilledButton.icon(
           onPressed: () => _save(),
           icon: const Icon(Icons.save_outlined),
-          label: const Text('수정 저장'),
+          label: Text(language.text('수정 저장', 'Save changes')),
         ),
       );
     }
@@ -478,25 +507,26 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
         FilledButton.icon(
           onPressed: () => _save(advanceDay: true),
           icon: const Icon(Icons.playlist_add_check),
-          label: const Text('저장 후 다음날 입력'),
+          label: Text(language.text('저장 후 다음날 입력', 'Save and enter next day')),
         ),
         const SizedBox(height: 8),
         OutlinedButton.icon(
           onPressed: () => _save(),
           icon: const Icon(Icons.add),
-          label: const Text('이 날짜에 저장만 하기'),
+          label: Text(language.text('이 날짜에 저장만 하기', 'Save this date only')),
         ),
       ],
     );
   }
 
   Widget _dayEntriesSection(List<WorkEntry> entries, DateFormat formatter) {
+    final language = ref.watch(appLanguageProvider);
     return _section(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${formatter.format(_date)} 기록',
+            '${_dateWithWeekday(_date, formatter, language)} ${language.text('기록', 'entries')}',
             style: const TextStyle(
               color: AppColors.deepInk,
               fontWeight: FontWeight.w900,
@@ -504,9 +534,12 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
           ),
           const SizedBox(height: 8),
           if (entries.isEmpty)
-            const Text(
-              '이 날짜에는 아직 기록이 없습니다.',
-              style: TextStyle(color: AppColors.softBlack),
+            Text(
+              language.text(
+                '이 날짜에는 아직 기록이 없습니다.',
+                'No entries for this date yet.',
+              ),
+              style: const TextStyle(color: AppColors.softBlack),
             )
           else
             ...entries.map((entry) => _entryTile(entry, formatter)),
@@ -521,6 +554,7 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
     DateTime weekStart,
     DateTime weekEnd,
   ) {
+    final language = ref.watch(appLanguageProvider);
     return _section(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -529,7 +563,10 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
             children: [
               Expanded(
                 child: Text(
-                  '이번 주 기록 ${entries.length}개',
+                  language.text(
+                    '이번 주 기록 ${entries.length}개',
+                    'This week: ${entries.length} entries',
+                  ),
                   style: const TextStyle(
                     color: AppColors.deepInk,
                     fontWeight: FontWeight.w900,
@@ -537,27 +574,38 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
                 ),
               ),
               IconButton(
-                tooltip: '지난주를 다음주로 복사',
+                tooltip: language.text(
+                  '지난주를 다음주로 복사',
+                  'Copy last week to next week',
+                ),
                 onPressed: _copyLastWeekForward,
                 icon: const Icon(Icons.content_copy),
               ),
             ],
           ),
           Text(
-            '${formatter.format(weekStart)} ~ ${formatter.format(weekEnd)}',
+            '${_dateWithWeekday(weekStart, formatter, language)} ~ ${_dateWithWeekday(weekEnd, formatter, language)}',
             style: const TextStyle(color: AppColors.softBlack, fontSize: 12),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: _copyLastWeekForward,
             icon: const Icon(Icons.copy_all_outlined),
-            label: const Text('지난주 패턴을 다음주로 복사'),
+            label: Text(
+              language.text(
+                '지난주 패턴을 다음주로 복사',
+                'Copy last week pattern to next week',
+              ),
+            ),
           ),
           const SizedBox(height: 8),
           if (entries.isEmpty)
-            const Text(
-              '주간 기록이 없습니다. 위에서 빠르게 추가해보세요.',
-              style: TextStyle(color: AppColors.softBlack),
+            Text(
+              language.text(
+                '주간 기록이 없습니다. 위에서 빠르게 추가해보세요.',
+                'No weekly entries yet. Add one above.',
+              ),
+              style: const TextStyle(color: AppColors.softBlack),
             )
           else
             ...entries.take(10).map((entry) => _entryTile(entry, formatter)),
@@ -567,14 +615,15 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
   }
 
   Widget _entryTile(WorkEntry entry, DateFormat formatter) {
+    final language = ref.watch(appLanguageProvider);
     final isDayOff = entry.type == WorkType.dayOff;
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
       title: Text(
         isDayOff
-            ? '${formatter.format(entry.date)} 휴무'
-            : '${formatter.format(entry.date)} ${_formatTimeOfDate(entry.start)}-${_formatTimeOfDate(entry.end)}',
+            ? '${_dateWithWeekday(entry.date, formatter, language)} ${language.text('휴무', 'Day off')}'
+            : '${_dateWithWeekday(entry.date, formatter, language)} ${_formatTimeOfDate(entry.start)}-${_formatTimeOfDate(entry.end)}',
         style: const TextStyle(
           color: AppColors.deepInk,
           fontWeight: FontWeight.w800,
@@ -582,8 +631,8 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
       ),
       subtitle: Text(
         isDayOff
-            ? '${_typeLabel(entry.type)} · 급여 계산 제외${entry.note.isEmpty ? '' : ' · ${entry.note}'}'
-            : '${_typeLabel(entry.type)} · ${entry.paidHours.toStringAsFixed(2)}h · 휴게 ${entry.breakMinutes}분${entry.note.isEmpty ? '' : ' · ${entry.note}'}',
+            ? '${_typeLabel(entry.type, language)} · ${language.text('급여 계산 제외', 'Excluded from pay')}${entry.note.isEmpty ? '' : ' · ${entry.note}'}'
+            : '${_typeLabel(entry.type, language)} · ${entry.paidHours.toStringAsFixed(2)}h · ${language.text('휴게 ${entry.breakMinutes}분', 'break ${entry.breakMinutes}m')}${entry.note.isEmpty ? '' : ' · ${entry.note}'}',
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(color: AppColors.softBlack),
@@ -592,12 +641,12 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            tooltip: '수정',
+            tooltip: language.text('수정', 'Edit'),
             icon: const Icon(Icons.edit_outlined),
             onPressed: () => _openEditor(entry),
           ),
           IconButton(
-            tooltip: '삭제',
+            tooltip: language.text('삭제', 'Delete'),
             icon: const Icon(Icons.delete_outline),
             onPressed: () => _deleteEntry(entry),
           ),
@@ -681,7 +730,10 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
     if (!mounted) return;
     if (copied.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('복사할 지난주 기록이 없습니다.')),
+        SnackBar(
+          content:
+              Text(_t('복사할 지난주 기록이 없습니다.', 'No last-week entries to copy.')),
+        ),
       );
       return;
     }
@@ -692,7 +744,14 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
       _typeTouched = false;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${copied.length}개 기록을 다음주로 복사했습니다.')),
+      SnackBar(
+        content: Text(
+          _t(
+            '${copied.length}개 기록을 다음주로 복사했습니다.',
+            'Copied ${copied.length} entries to next week.',
+          ),
+        ),
+      ),
     );
   }
 
@@ -700,16 +759,16 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('기록 삭제'),
-        content: const Text('이 근무 기록을 삭제할까요?'),
+        title: Text(_t('기록 삭제', 'Delete entry')),
+        content: Text(_t('이 근무 기록을 삭제할까요?', 'Delete this work entry?')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('취소'),
+            child: Text(_t('취소', 'Cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('삭제'),
+            child: Text(_t('삭제', 'Delete')),
           ),
         ],
       ),
@@ -718,7 +777,7 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
     await ref.read(workEntriesProvider.notifier).remove(entry);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('근무 기록을 삭제했어요.')),
+      SnackBar(content: Text(_t('근무 기록을 삭제했어요.', 'Work entry deleted.'))),
     );
   }
 
@@ -780,7 +839,9 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
     final entry = _buildTempEntry();
     if (entry == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('근무 시간이 올바르지 않습니다.')),
+        SnackBar(
+          content: Text(_t('근무 시간이 올바르지 않습니다.', 'Work time is invalid.')),
+        ),
       );
       return;
     }
@@ -813,7 +874,11 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(isEditing ? '수정되었습니다.' : '추가되었습니다.')),
+      SnackBar(
+        content: Text(
+          isEditing ? _t('수정되었습니다.', 'Updated.') : _t('추가되었습니다.', 'Added.'),
+        ),
+      ),
     );
     if (isEditing) {
       Navigator.of(context).pop();
@@ -889,23 +954,28 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
     return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
-  String _weekdayLabel(int weekday) {
-    const names = ['월', '화', '수', '목', '금', '토', '일'];
-    return names[(weekday - 1) % 7];
+  String _dateWithWeekday(
+    DateTime date,
+    DateFormat formatter,
+    AppLanguage language,
+  ) {
+    return '${formatter.format(date)} (${weekdayLabel(date, language)})';
   }
 
-  String _typeLabel(WorkType type) {
+  String _typeLabel(WorkType type, AppLanguage language) {
     switch (type) {
       case WorkType.weekday:
-        return '평일';
+        return language.text('평일', 'Weekday');
       case WorkType.saturday:
-        return '토요일';
+        return language.text('토요일', 'Saturday');
       case WorkType.sunday:
-        return '일요일';
+        return language.text('일요일', 'Sunday');
       case WorkType.holiday:
-        return '공휴일';
+        return language.text('공휴일', 'Public holiday');
       case WorkType.dayOff:
-        return '휴무';
+        return language.text('휴무', 'Day off');
     }
   }
+
+  String _t(String ko, String en) => ref.read(appLanguageProvider).text(ko, en);
 }

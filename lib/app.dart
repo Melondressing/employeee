@@ -18,6 +18,7 @@ import 'screens/work_entry_form_screen.dart';
 import 'screens/work_log_screen.dart';
 import 'services/auth_service.dart';
 import 'services/cloud_sync_coordinator.dart';
+import 'services/language_service.dart';
 import 'theme/colors.dart';
 
 class AuthGate extends ConsumerStatefulWidget {
@@ -76,11 +77,12 @@ class _AuthGateState extends ConsumerState<AuthGate> {
   }
 }
 
-class EmployeeeeApp extends StatelessWidget {
+class EmployeeeeApp extends ConsumerWidget {
   const EmployeeeeApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final language = ref.watch(appLanguageProvider);
     const subtleShadow = [
       Shadow(color: Color(0x22FFFFFF), blurRadius: 2, offset: Offset(0, 1)),
     ];
@@ -88,6 +90,7 @@ class EmployeeeeApp extends StatelessWidget {
     return MaterialApp(
       title: 'employeeee',
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      locale: language.locale,
       supportedLocales: const [
         Locale('en', 'GB'),
         Locale('ko', 'KR'),

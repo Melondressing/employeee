@@ -5,12 +5,14 @@ import 'package:share_plus/share_plus.dart';
 
 import '../models/pay_rule.dart';
 import '../models/work_entry.dart';
+import '../services/language_service.dart';
 import '../services/providers.dart';
 import '../theme/colors.dart';
 import '../widgets/app_date_picker.dart';
 import '../widgets/app_page.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/glass_card.dart';
+import '../widgets/language_toggle.dart';
 import '../widgets/period_range_controls.dart';
 import 'work_entry_form_screen.dart';
 
@@ -21,6 +23,7 @@ class WorkLogScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isCompact = MediaQuery.sizeOf(context).width < 390;
+    final language = ref.watch(appLanguageProvider);
     final entries = ref.watch(workEntriesProvider);
     final rule = ref.watch(payRuleProvider);
     final calc = ref.watch(payCalculatorProvider);
@@ -49,15 +52,19 @@ class WorkLogScreen extends ConsumerWidget {
 
     return AppScaffold(
       appBar: AppBar(
-        title: const Text('근무 기록지'),
+        title: Text(language.text('근무 기록지', 'Work log')),
         actions: [
+          const LanguageToggle(compact: true),
           IconButton(
             icon: const Icon(Icons.ios_share),
             onPressed: filtered.isEmpty
                 ? null
                 : () async {
                     final csv = _toCsv(filtered);
-                    await Share.share(csv, subject: '근무 기록 CSV');
+                    await Share.share(
+                      csv,
+                      subject: language.text('근무 기록 CSV', 'Work log CSV'),
+                    );
                   },
           )
         ],
@@ -71,10 +78,14 @@ class WorkLogScreen extends ConsumerWidget {
                   const Icon(Icons.inbox_outlined,
                       size: 48, color: AppColors.softBlack),
                   const SizedBox(height: 8),
-                  const Text('No entries',
-                      style: TextStyle(color: AppColors.softBlack)),
-                  const Text('Add work entries to see them here',
-                      style: TextStyle(color: AppColors.softBlack)),
+                  Text(language.text('기록이 없습니다', 'No entries'),
+                      style: const TextStyle(color: AppColors.softBlack)),
+                  Text(
+                      language.text(
+                        '근무 기록을 입력하면 여기에 표시됩니다',
+                        'Add work entries to see them here',
+                      ),
+                      style: const TextStyle(color: AppColors.softBlack)),
                   const SizedBox(height: 16),
                   PeriodRangeControls(
                     from: from,
@@ -112,7 +123,7 @@ class WorkLogScreen extends ConsumerWidget {
                           DateTimeRange(start: monthStart, end: monthEnd);
                       ref.read(cycleOffsetProvider.notifier).state = 0;
                     },
-                    monthLabel: '이번 달',
+                    monthLabel: language.text('이번 달', 'This month'),
                     onReset: () {
                       ref.read(customRangeProvider.notifier).state = null;
                       ref.read(cycleOffsetProvider.notifier).state = 0;
@@ -158,7 +169,7 @@ class WorkLogScreen extends ConsumerWidget {
                           DateTimeRange(start: monthStart, end: monthEnd);
                       ref.read(cycleOffsetProvider.notifier).state = 0;
                     },
-                    monthLabel: '이번 달',
+                    monthLabel: language.text('이번 달', 'This month'),
                     onReset: () {
                       ref.read(customRangeProvider.notifier).state = null;
                       ref.read(cycleOffsetProvider.notifier).state = 0;
@@ -174,21 +185,22 @@ class WorkLogScreen extends ConsumerWidget {
                           spacing: 12,
                           runSpacing: 10,
                           children: [
-                            _stat('Entries', '${filtered.length}',
+                            _stat(language.text('기록', 'Entries'),
+                                '${filtered.length}',
                                 compact: isCompact),
                             _stat(
-                              'Total Hours',
+                              language.text('총 시간', 'Total hours'),
                               '${summary.totalHours.toStringAsFixed(2)} h',
                               compact: isCompact,
                             ),
                             _stat(
-                              'Gross',
+                              language.text('세전', 'Gross'),
                               NumberFormat.currency(symbol: '${rule.currency} ')
                                   .format(summary.gross),
                               compact: isCompact,
                             ),
                             _stat(
-                              'Net',
+                              language.text('세후', 'Net'),
                               NumberFormat.currency(symbol: '${rule.currency} ')
                                   .format(summary.net),
                               compact: isCompact,
@@ -197,7 +209,10 @@ class WorkLogScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          '기간: ${fmt.format(from)} ~ ${fmt.format(to)} · 지급일 ${fmt.format(payday)}',
+                          language.text(
+                            '기간: ${_dateWithWeekday(from, fmt, language)} ~ ${_dateWithWeekday(to, fmt, language)} · 지급일 ${_dateWithWeekday(payday, fmt, language)}',
+                            'Period: ${_dateWithWeekday(from, fmt, language)} ~ ${_dateWithWeekday(to, fmt, language)} · payday ${_dateWithWeekday(payday, fmt, language)}',
+                          ),
                           style: const TextStyle(
                               color: AppColors.softBlack, fontSize: 12),
                         ),
@@ -220,7 +235,7 @@ class WorkLogScreen extends ConsumerWidget {
                           return ListTile(
                             contentPadding: EdgeInsets.zero,
                             title: Text(
-                              '${fmt.format(e.date)} / ${_typeLabel(e.type)}',
+                              '${_dateWithWeekday(e.date, fmt, language)} / ${_typeLabel(e.type, language)}',
                               style: const TextStyle(
                                   color: AppColors.deepInk,
                                   fontWeight: FontWeight.w700),
@@ -230,14 +245,21 @@ class WorkLogScreen extends ConsumerWidget {
                               children: [
                                 Text(
                                   isDayOff
-                                      ? '휴무 · 급여 계산 제외'
-                                      : '시간 ${e.paidHours.toStringAsFixed(2)}h | ${_h(e.start)} ~ ${_h(e.end)} | 휴게 ${e.breakMinutes}분',
+                                      ? language.text(
+                                          '휴무 · 급여 계산 제외',
+                                          'Day off · excluded from pay',
+                                        )
+                                      : language.text(
+                                          '시간 ${e.paidHours.toStringAsFixed(2)}h | ${_h(e.start)} ~ ${_h(e.end)} | 휴게 ${e.breakMinutes}분',
+                                          '${e.paidHours.toStringAsFixed(2)}h | ${_h(e.start)} ~ ${_h(e.end)} | break ${e.breakMinutes}m',
+                                        ),
                                   style: const TextStyle(
                                       color: AppColors.softBlack),
                                 ),
                                 if (e.note.isNotEmpty)
                                   Text(
-                                    '메모: ${e.note}',
+                                    language.text(
+                                        '메모: ${e.note}', 'Note: ${e.note}'),
                                     style: const TextStyle(
                                         color: AppColors.deepInk),
                                   ),
@@ -247,7 +269,7 @@ class WorkLogScreen extends ConsumerWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  tooltip: '수정',
+                                  tooltip: language.text('수정', 'Edit'),
                                   icon: const Icon(Icons.edit_outlined),
                                   onPressed: () {
                                     Navigator.of(context).push(
@@ -259,24 +281,30 @@ class WorkLogScreen extends ConsumerWidget {
                                   },
                                 ),
                                 IconButton(
-                                  tooltip: '삭제',
+                                  tooltip: language.text('삭제', 'Delete'),
                                   icon: const Icon(Icons.delete_outline),
                                   onPressed: () async {
                                     final confirmed = await showDialog<bool>(
                                       context: context,
                                       builder: (dialogContext) => AlertDialog(
-                                        title: const Text('기록 삭제'),
-                                        content: const Text('이 근무 기록을 삭제할까요?'),
+                                        title: Text(language.text(
+                                            '기록 삭제', 'Delete entry')),
+                                        content: Text(language.text(
+                                          '이 근무 기록을 삭제할까요?',
+                                          'Delete this work entry?',
+                                        )),
                                         actions: [
                                           TextButton(
                                             onPressed: () => Navigator.pop(
                                                 dialogContext, false),
-                                            child: const Text('취소'),
+                                            child: Text(
+                                                language.text('취소', 'Cancel')),
                                           ),
                                           FilledButton(
                                             onPressed: () => Navigator.pop(
                                                 dialogContext, true),
-                                            child: const Text('삭제'),
+                                            child: Text(
+                                                language.text('삭제', 'Delete')),
                                           ),
                                         ],
                                       ),
@@ -287,8 +315,14 @@ class WorkLogScreen extends ConsumerWidget {
                                         .remove(e);
                                     if (!context.mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text('근무 기록을 삭제했어요.')),
+                                      SnackBar(
+                                        content: Text(
+                                          language.text(
+                                            '근무 기록을 삭제했어요.',
+                                            'Work entry deleted.',
+                                          ),
+                                        ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -308,28 +342,29 @@ class WorkLogScreen extends ConsumerWidget {
   String _h(DateTime d) =>
       '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 
-  String _typeLabel(WorkType t) {
+  String _typeLabel(WorkType t, AppLanguage language) {
     switch (t) {
       case WorkType.weekday:
-        return '평일';
+        return language.text('평일', 'Weekday');
       case WorkType.saturday:
-        return '토';
+        return language.text('토', 'Sat');
       case WorkType.sunday:
-        return '일';
+        return language.text('일', 'Sun');
       case WorkType.holiday:
-        return '공휴';
+        return language.text('공휴', 'Holiday');
       case WorkType.dayOff:
-        return '휴무';
+        return language.text('휴무', 'Day off');
     }
   }
 
   String _toCsv(List<WorkEntry> entries) {
     const header =
-        'date,start,end,breakMinutes,type,hours,note,night,leaveHoursUsed';
+        'date,weekday,start,end,breakMinutes,type,hours,note,night,leaveHoursUsed';
     final fmt = DateFormat('yyyy-MM-dd');
     final lines = entries.map((e) {
       return [
         fmt.format(e.date),
+        weekdayLabel(e.date, AppLanguage.en),
         _h(e.start),
         _h(e.end),
         e.breakMinutes,
@@ -341,6 +376,14 @@ class WorkLogScreen extends ConsumerWidget {
       ].join(',');
     }).toList();
     return ([header, ...lines]).join('\n');
+  }
+
+  String _dateWithWeekday(
+    DateTime date,
+    DateFormat formatter,
+    AppLanguage language,
+  ) {
+    return '${formatter.format(date)} (${weekdayLabel(date, language)})';
   }
 
   Widget _stat(String title, String value, {required bool compact}) {

@@ -4,11 +4,13 @@ import 'package:intl/intl.dart';
 
 import '../models/pay_rule.dart';
 import '../models/work_entry.dart';
+import '../services/language_service.dart';
 import '../services/providers.dart';
 import '../theme/colors.dart';
 import '../widgets/app_page.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/glass_card.dart';
+import '../widgets/language_toggle.dart';
 import '../widgets/nav_card.dart';
 import 'calculator_screen.dart';
 import 'login_screen.dart';
@@ -25,6 +27,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rule = ref.watch(payRuleProvider);
+    final language = ref.watch(appLanguageProvider);
     final entries = ref.watch(workEntriesProvider);
     final calc = ref.watch(payCalculatorProvider);
     final cycle = calc.currentCycle(rule);
@@ -58,8 +61,9 @@ class HomeScreen extends ConsumerWidget {
         title: const _HomeAppBarTitle(),
         toolbarHeight: 58,
         actions: [
+          const LanguageToggle(compact: true),
           IconButton(
-            tooltip: 'Account',
+            tooltip: language.text('계정', 'Account'),
             onPressed: () => Navigator.pushNamed(context, LoginScreen.route),
             icon: const Icon(Icons.account_circle_outlined),
           ),
@@ -73,6 +77,7 @@ class HomeScreen extends ConsumerWidget {
           padding: EdgeInsets.zero,
           children: [
             _TopSummary(
+              language: language,
               net: formatter.format(cycleResult.net),
               cycleStart: cycle.$1,
               cycleEnd: cycle.$2,
@@ -83,6 +88,7 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
             _PreviousPaySummary(
+              language: language,
               net: formatter.format(previousResult.net),
               gross: formatter.format(previousResult.gross),
               hours: '${previousResult.totalHours.toStringAsFixed(2)} h',
@@ -98,6 +104,7 @@ class HomeScreen extends ConsumerWidget {
             _HomeMonthCalendar(
               entries: entries,
               rule: rule,
+              language: language,
               onDateTap: (date) => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => WorkEntryFormScreen(initialDate: date),
@@ -105,16 +112,16 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 14),
-            const Text(
-              'Tools',
-              style: TextStyle(
+            Text(
+              language.text('도구', 'Tools'),
+              style: const TextStyle(
                 color: AppColors.deepInk,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.3,
               ),
             ),
             const SizedBox(height: 8),
-            ..._navCards(context).map(
+            ..._navCards(context, language).map(
               (card) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: card,
@@ -127,54 +134,69 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  List<Widget> _navCards(BuildContext context) {
+  List<Widget> _navCards(BuildContext context, AppLanguage language) {
     return [
       NavCard(
-        title: 'Settings & Rules',
-        subtitle: 'Currency, wage, tax rates, pay cycle, leave',
+        title: language.text('설정 & 규칙', 'Settings & Rules'),
+        subtitle: language.text(
+          '통화, 시급, 세율, 급여주기, 연차',
+          'Currency, wage, tax rates, pay cycle, leave',
+        ),
         icon: '⚙️',
         onTap: () => Navigator.pushNamed(context, RulesScreen.route),
         bg: AppColors.lavender,
       ),
       NavCard(
-        title: 'Add Work Entry',
-        subtitle: 'Log date, hours, break and work type',
+        title: language.text('근무 기록 입력', 'Add Work Entry'),
+        subtitle: language.text(
+          '날짜, 시간, 휴게, 근무유형 기록',
+          'Log date, hours, break and work type',
+        ),
         icon: '🕐',
         onTap: () => Navigator.pushNamed(context, WorkEntryFormScreen.route),
         bg: AppColors.serenityBlue,
       ),
       NavCard(
-        title: 'Work Log',
-        subtitle: 'All entries · CSV export',
+        title: language.text('근무 기록지', 'Work Log'),
+        subtitle: language.text('전체 기록 · CSV 내보내기', 'All entries · CSV export'),
         icon: '📋',
         onTap: () => Navigator.pushNamed(context, WorkLogScreen.route),
         bg: AppColors.softRose,
       ),
       NavCard(
-        title: 'Pay History',
-        subtitle: 'Past pay · monthly view · Budget draft',
+        title: language.text('급여 기록', 'Pay History'),
+        subtitle: language.text(
+          '지난 급여 · 월별 보기 · Budget 초안',
+          'Past pay · monthly view · Budget draft',
+        ),
         icon: '📆',
         onTap: () => Navigator.pushNamed(context, PayHistoryScreen.route),
         bg: AppColors.lavender,
       ),
       NavCard(
-        title: 'Pay Calculator',
-        subtitle: 'Gross · Net · per-type breakdown',
+        title: language.text('급여 계산기', 'Pay Calculator'),
+        subtitle: language.text(
+          '세전 · 세후 · 유형별 합계',
+          'Gross · Net · per-type breakdown',
+        ),
         icon: '🧮',
         onTap: () => Navigator.pushNamed(context, CalculatorScreen.route),
         bg: AppColors.mint,
       ),
       NavCard(
-        title: 'Reverse Calculator',
-        subtitle: 'Net target → required rate',
+        title: language.text('급여 역산기', 'Reverse Calculator'),
+        subtitle: language.text('실수령 목표 → 필요 시급', 'Net target → required rate'),
         icon: '🔄',
         onTap: () =>
             Navigator.pushNamed(context, ReverseCalculatorScreen.route),
         bg: AppColors.warmYellow,
       ),
       NavCard(
-        title: 'Payslip Checker',
-        subtitle: 'Compare payslip vs my calc',
+        title: language.text('급여 검증기', 'Payslip Checker'),
+        subtitle: language.text(
+          '명세서와 내 계산 비교',
+          'Compare payslip vs my calc',
+        ),
         icon: '✅',
         onTap: () => Navigator.pushNamed(context, PaycheckCheckerScreen.route),
         bg: AppColors.taupe,
@@ -187,11 +209,13 @@ class _HomeMonthCalendar extends StatelessWidget {
   const _HomeMonthCalendar({
     required this.entries,
     required this.rule,
+    required this.language,
     required this.onDateTap,
   });
 
   final List<WorkEntry> entries;
   final PayRule rule;
+  final AppLanguage language;
   final ValueChanged<DateTime> onDateTap;
 
   @override
@@ -231,7 +255,8 @@ class _HomeMonthCalendar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${month.month}월 근무 달력',
+            language.text('${month.month}월 근무 달력',
+                '${DateFormat.MMMM('en_GB').format(month)} work calendar'),
             style: const TextStyle(
               color: AppColors.deepInk,
               fontWeight: FontWeight.w900,
@@ -240,7 +265,10 @@ class _HomeMonthCalendar extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            '월 ${totalHours.toStringAsFixed(1)}h · 근무 ${workedDays.length}일',
+            language.text(
+              '월 ${totalHours.toStringAsFixed(1)}h · 근무 ${workedDays.length}일',
+              'Month ${totalHours.toStringAsFixed(1)}h · ${workedDays.length} worked days',
+            ),
             style: const TextStyle(
               color: AppColors.softBlack,
               fontSize: 12,
@@ -248,12 +276,12 @@ class _HomeMonthCalendar extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 7),
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
-            child: _MiniLegend(),
+            child: _MiniLegend(language: language),
           ),
           const SizedBox(height: 10),
-          _CalendarHeader(startsSunday: startsSunday),
+          _CalendarHeader(startsSunday: startsSunday, language: language),
           const SizedBox(height: 5),
           for (final week in weeks) ...[
             _CalendarWeekRow(
@@ -271,15 +299,35 @@ class _HomeMonthCalendar extends StatelessWidget {
 }
 
 class _CalendarHeader extends StatelessWidget {
-  const _CalendarHeader({required this.startsSunday});
+  const _CalendarHeader({
+    required this.startsSunday,
+    required this.language,
+  });
 
   final bool startsSunday;
+  final AppLanguage language;
 
   @override
   Widget build(BuildContext context) {
     final labels = startsSunday
-        ? const ['일', '월', '화', '수', '목', '금', '토']
-        : const ['월', '화', '수', '목', '금', '토', '일'];
+        ? [
+            weekdayLabel(DateTime(2026, 5, 10), language),
+            weekdayLabel(DateTime(2026, 5, 11), language),
+            weekdayLabel(DateTime(2026, 5, 12), language),
+            weekdayLabel(DateTime(2026, 5, 13), language),
+            weekdayLabel(DateTime(2026, 5, 14), language),
+            weekdayLabel(DateTime(2026, 5, 15), language),
+            weekdayLabel(DateTime(2026, 5, 16), language),
+          ]
+        : [
+            weekdayLabel(DateTime(2026, 5, 11), language),
+            weekdayLabel(DateTime(2026, 5, 12), language),
+            weekdayLabel(DateTime(2026, 5, 13), language),
+            weekdayLabel(DateTime(2026, 5, 14), language),
+            weekdayLabel(DateTime(2026, 5, 15), language),
+            weekdayLabel(DateTime(2026, 5, 16), language),
+            weekdayLabel(DateTime(2026, 5, 17), language),
+          ];
 
     return Row(
       children: [
@@ -297,12 +345,12 @@ class _CalendarHeader extends StatelessWidget {
             ),
           ),
         const SizedBox(width: 5),
-        const SizedBox(
+        SizedBox(
           width: 42,
           child: Text(
-            '주간',
+            language.text('주간', 'Week'),
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.softBlack,
               fontSize: 10,
               fontWeight: FontWeight.w800,
@@ -465,20 +513,29 @@ class _WeekHours extends StatelessWidget {
 }
 
 class _MiniLegend extends StatelessWidget {
-  const _MiniLegend();
+  const _MiniLegend({required this.language});
+
+  final AppLanguage language;
 
   @override
   Widget build(BuildContext context) {
-    return const Wrap(
+    return Wrap(
       spacing: 6,
       runSpacing: 4,
       alignment: WrapAlignment.end,
       children: [
-        _LegendDot(label: '근무', color: _CalendarColors.work),
-        _LegendDot(label: '휴무', color: _CalendarColors.dayOff),
-        _LegendDot(label: '공휴', color: _CalendarColors.holiday),
-        _LegendDot(label: '야간', color: _CalendarColors.night),
-        _LegendDot(label: '미입력', color: _CalendarColors.unrecorded),
+        _LegendDot(
+            label: language.text('근무', 'Work'), color: _CalendarColors.work),
+        _LegendDot(
+            label: language.text('휴무', 'Off'), color: _CalendarColors.dayOff),
+        _LegendDot(
+            label: language.text('공휴', 'Holiday'),
+            color: _CalendarColors.holiday),
+        _LegendDot(
+            label: language.text('야간', 'Night'), color: _CalendarColors.night),
+        _LegendDot(
+            label: language.text('미입력', 'Empty'),
+            color: _CalendarColors.unrecorded),
       ],
     );
   }
@@ -568,6 +625,7 @@ class _HomeAppBarTitle extends StatelessWidget {
 
 class _TopSummary extends StatelessWidget {
   const _TopSummary({
+    required this.language,
     required this.net,
     required this.cycleStart,
     required this.cycleEnd,
@@ -577,6 +635,7 @@ class _TopSummary extends StatelessWidget {
     required this.leave,
   });
 
+  final AppLanguage language;
   final String net;
   final DateTime cycleStart;
   final DateTime cycleEnd;
@@ -597,9 +656,9 @@ class _TopSummary extends StatelessWidget {
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '이번 급여 예상',
-                    style: TextStyle(
+                  Text(
+                    language.text('이번 급여 예상', 'Estimated pay'),
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.2,
@@ -627,7 +686,12 @@ class _TopSummary extends StatelessWidget {
                   const SizedBox(height: 10),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: _Pill(label: '지급일 ${_d(payDate)}'),
+                    child: _Pill(
+                      label: language.text(
+                        '지급일 ${_d(payDate)}',
+                        'Payday ${_d(payDate)}',
+                      ),
+                    ),
                   ),
                 ],
               )
@@ -637,9 +701,9 @@ class _TopSummary extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          '이번 급여 예상',
-                          style: TextStyle(
+                        Text(
+                          language.text('이번 급여 예상', 'Estimated pay'),
+                          style: const TextStyle(
                             color: Colors.white70,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 0.2,
@@ -671,7 +735,12 @@ class _TopSummary extends StatelessWidget {
                   Flexible(
                     child: Align(
                       alignment: Alignment.centerRight,
-                      child: _Pill(label: '지급일 ${_d(payDate)}'),
+                      child: _Pill(
+                        label: language.text(
+                          '지급일 ${_d(payDate)}',
+                          'Payday ${_d(payDate)}',
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -714,22 +783,22 @@ class _TopSummary extends StatelessWidget {
                 runSpacing: 8,
                 children: [
                   _MetricTile(
-                    label: '세전',
+                    label: language.text('세전', 'Gross'),
                     value: gross,
                     width: metricWidth,
                   ),
                   _MetricTile(
-                    label: '총 시간',
+                    label: language.text('총 시간', 'Hours'),
                     value: hours,
                     width: metricWidth,
                   ),
                   _MetricTile(
-                    label: '급여 주기',
+                    label: language.text('급여 주기', 'Pay period'),
                     value: '${_d(cycleStart)} ~ ${_d(cycleEnd)}',
                     width: metricWidth,
                   ),
                   _MetricTile(
-                    label: '남은 연차',
+                    label: language.text('남은 연차', 'Leave left'),
                     value: leave,
                     width: metricWidth,
                   ),
@@ -745,6 +814,7 @@ class _TopSummary extends StatelessWidget {
 
 class _PreviousPaySummary extends StatelessWidget {
   const _PreviousPaySummary({
+    required this.language,
     required this.net,
     required this.gross,
     required this.hours,
@@ -754,6 +824,7 @@ class _PreviousPaySummary extends StatelessWidget {
     required this.onTap,
   });
 
+  final AppLanguage language;
   final String net;
   final String gross;
   final String hours;
@@ -795,10 +866,10 @@ class _PreviousPaySummary extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        '지난 급여 확인',
-                        style: TextStyle(
+                        language.text('지난 급여 확인', 'Previous pay'),
+                        style: const TextStyle(
                           color: AppColors.deepInk,
                           fontWeight: FontWeight.w900,
                           fontSize: 15,
@@ -806,7 +877,10 @@ class _PreviousPaySummary extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '지급일 ${_d(payDate)}',
+                      language.text(
+                        '지급일 ${_d(payDate)}',
+                        'Payday ${_d(payDate)}',
+                      ),
                       style: const TextStyle(
                         color: AppColors.softBlack,
                         fontWeight: FontWeight.w700,
@@ -828,7 +902,7 @@ class _PreviousPaySummary extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '세전 $gross',
+                      language.text('세전 $gross', 'Gross $gross'),
                       style: const TextStyle(
                         color: AppColors.softBlack,
                         fontSize: 12,
