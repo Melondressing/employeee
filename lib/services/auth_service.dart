@@ -58,11 +58,13 @@ class AuthSessionNotifier extends StateNotifier<AuthSession?> {
     required String username,
     required String password,
     required String displayName,
+    required String inviteCode,
   }) async {
     final session = await _apiClient.register(
       username: username.trim(),
       password: password.trim(),
       displayName: displayName.trim(),
+      inviteCode: inviteCode.trim(),
     );
     state = session;
     await AuthStorage.saveSession(session);
@@ -188,6 +190,7 @@ class AuthApiClient {
     required String username,
     required String password,
     required String displayName,
+    required String inviteCode,
   }) async {
     final body = await _postJson(
       '/api/auth/register',
@@ -195,6 +198,7 @@ class AuthApiClient {
         'username': username,
         'password': password,
         'name': displayName,
+        'inviteCode': inviteCode,
       },
     );
     return _sessionFromAuthPayload(

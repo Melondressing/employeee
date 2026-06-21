@@ -19,6 +19,7 @@ import 'screens/work_log_screen.dart';
 import 'services/auth_service.dart';
 import 'services/cloud_sync_coordinator.dart';
 import 'services/language_service.dart';
+import 'services/providers.dart';
 import 'theme/colors.dart';
 
 class AuthGate extends ConsumerStatefulWidget {
@@ -31,6 +32,7 @@ class AuthGate extends ConsumerStatefulWidget {
 class _AuthGateState extends ConsumerState<AuthGate> {
   String? _lastCloudSyncKey;
   Timer? _cloudRefreshTimer;
+  bool _hadCloudSession = false;
 
   @override
   void dispose() {
@@ -41,8 +43,23 @@ class _AuthGateState extends ConsumerState<AuthGate> {
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(authSessionProvider);
+    _handleSessionTransition(session);
     _scheduleCloudSync(session);
     return session == null ? const LoginScreen() : const HomeScreen();
+  }
+
+  void _handleSessionTransition(AuthSession? session) {
+    final hasCloudSession = session != null && session.hasCloudToken;
+
+    if (_hadCloudSession && !hasCloudSession) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        unawaited(ref.read(payRuleProvider.notifier).reload());
+        unawaited(ref.read(workEntriesProvider.notifier).reload());
+      });
+    }
+
+    _hadCloudSession = hasCloudSession;
   }
 
   void _scheduleCloudSync(AuthSession? session) {
@@ -88,7 +105,7 @@ class EmployeeeeApp extends ConsumerWidget {
     ];
 
     return MaterialApp(
-      title: 'employeeee',
+      title: 'eymployeee',
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       locale: language.locale,
       supportedLocales: const [

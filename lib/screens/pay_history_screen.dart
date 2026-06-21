@@ -236,7 +236,7 @@ class _PayHistoryScreenState extends ConsumerState<PayHistoryScreen> {
 
     await Share.share(
       payload,
-      subject: 'employeeee 급여 기록 ${formatter.format(summary.result.net)}',
+      subject: 'eymployeee 급여 기록 ${formatter.format(summary.result.net)}',
     );
   }
 
@@ -315,7 +315,7 @@ class _PayHistoryScreenState extends ConsumerState<PayHistoryScreen> {
       'entry_count': summary.entryCount,
       'category': '급여',
       'description':
-          employer.isEmpty ? 'employeeee 급여 $period' : '$employer 급여 $period',
+          employer.isEmpty ? 'eymployeee 급여 $period' : '$employer 급여 $period',
       'employment_type': rule.employmentType.name,
       'employee_name': rule.employeeName,
       'employer_name': rule.employerName,

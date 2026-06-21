@@ -118,8 +118,6 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
                   if (isDayOff)
                     _dayOffNotice()
                   else ...[
-                    _presetSection(),
-                    const SizedBox(height: 12),
                     Row(
                       children: [
                         Expanded(
@@ -246,37 +244,6 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
     );
   }
 
-  Widget _presetSection() {
-    final language = ref.watch(appLanguageProvider);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          language.text('자주 쓰는 시간', 'Quick presets'),
-          style: const TextStyle(
-            color: AppColors.deepInk,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _presetChip('9-6', const TimeOfDay(hour: 9, minute: 0),
-                const TimeOfDay(hour: 18, minute: 0), 60, false),
-            _presetChip('2-10', const TimeOfDay(hour: 14, minute: 0),
-                const TimeOfDay(hour: 22, minute: 0), 30, false),
-            _presetChip('10-6 야간', const TimeOfDay(hour: 22, minute: 0),
-                const TimeOfDay(hour: 6, minute: 0), 30, true),
-            _presetChip(
-                language.text('휴게 없음', 'No break'), _start, _end, 0, _isNight),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget _timeControl({
     required String label,
     required TimeOfDay time,
@@ -338,20 +305,17 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
             fontWeight: FontWeight.w700,
           ),
         ),
-        Slider(
-          value: _breakMinutes.toDouble(),
-          min: 0,
-          max: 180,
-          divisions: 12,
-          label: '$_breakMinutes 분',
-          onChanged: (value) => setState(() => _breakMinutes = value.round()),
-        ),
+        const SizedBox(height: 8),
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: [0, 15, 30, 45, 60].map((minutes) {
+          children: [0, 30, 60, 90, 120, 150].map((minutes) {
             return ChoiceChip(
-              label: Text(language.text('$minutes분', '${minutes}m')),
+              label: Text(
+                minutes == 0
+                    ? language.text('없음', 'None')
+                    : language.text('$minutes분', '${minutes}m'),
+              ),
               selected: _breakMinutes == minutes,
               backgroundColor: AppColors.cardSurfaceAlt,
               selectedColor: AppColors.vividOrange.withValues(alpha: 0.3),
@@ -653,29 +617,6 @@ class _WorkEntryFormScreenState extends ConsumerState<WorkEntryFormScreen> {
         ],
       ),
       onTap: () => _openEditor(entry),
-    );
-  }
-
-  Widget _presetChip(
-    String label,
-    TimeOfDay start,
-    TimeOfDay end,
-    int breakMinutes,
-    bool night,
-  ) {
-    return ActionChip(
-      label: Text(label),
-      backgroundColor: AppColors.cardSurfaceAlt,
-      side: const BorderSide(color: AppColors.glassStroke),
-      labelStyle: const TextStyle(color: AppColors.deepInk),
-      onPressed: () {
-        setState(() {
-          _start = start;
-          _end = end;
-          _breakMinutes = breakMinutes;
-          _isNight = night;
-        });
-      },
     );
   }
 

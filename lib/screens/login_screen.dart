@@ -27,6 +27,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _username = TextEditingController();
   final _displayName = TextEditingController();
   final _password = TextEditingController();
+  final _inviteCode = TextEditingController();
   bool _obscure = true;
   bool _isRegister = false;
   bool _isSubmitting = false;
@@ -36,6 +37,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _username.dispose();
     _displayName.dispose();
     _password.dispose();
+    _inviteCode.dispose();
     super.dispose();
   }
 
@@ -75,7 +77,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const _BrandMark(),
                 const SizedBox(height: 10),
                 const Text(
-                  'employeeee',
+                  'eymployeee',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: AppColors.deepInk,
@@ -163,6 +165,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ? null
                 : (selection) => setState(() => _isRegister = selection.first),
           ),
+          if (_isRegister) ...[
+            const SizedBox(height: 8),
+            Text(
+              language.text(
+                '초기 홍보용 초대 코드가 있어야 가입할 수 있어요.',
+                'You need an invite code to create an account during the early launch.',
+              ),
+              style: const TextStyle(color: AppColors.softBlack, height: 1.35),
+            ),
+          ],
           const SizedBox(height: 12),
           TextField(
             controller: _username,
@@ -182,6 +194,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               decoration: InputDecoration(
                 labelText: language.text('이름 / 표시 이름', 'Name / display name'),
                 prefixIcon: const Icon(Icons.badge_outlined),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _inviteCode,
+              textInputAction: TextInputAction.next,
+              textCapitalization: TextCapitalization.characters,
+              autofillHints: const [AutofillHints.oneTimeCode],
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9-]')),
+                UpperCaseTextFormatter(),
+              ],
+              decoration: InputDecoration(
+                labelText: language.text('초대 코드', 'Invite code'),
+                hintText: language.text('예: LAUNCH-001', 'e.g. LAUNCH-001'),
+                prefixIcon: const Icon(Icons.key_outlined),
               ),
             ),
           ],
@@ -331,8 +359,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _PlanRow(
             icon: Icons.storage_outlined,
             title: language.text(
-              'employeeee 데이터 분리 예정',
-              'employeeee data is separated',
+              'eymployeee 데이터 분리 예정',
+              'eymployeee data is separated',
             ),
             subtitle: language.text(
               'pay_rules, work_entries는 같은 user_id 아래 별도 테이블로 붙입니다.',
@@ -369,6 +397,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final username = _username.text.trim();
     final password = _password.text.trim();
     final displayName = _displayName.text.trim();
+    final inviteCode = _inviteCode.text.trim().toUpperCase();
 
     if (username.isEmpty || password.length != 4) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -393,12 +422,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
       return;
     }
+    if (_isRegister && inviteCode.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _t('회원가입에는 초대 코드가 필요해요.', 'An invite code is required to sign up.'),
+          ),
+        ),
+      );
+      return;
+    }
 
     setState(() => _isSubmitting = true);
     try {
-      final importDeviceData = _isRegister && await Storage.hasLocalWorkData()
-          ? await _confirmDeviceDataImport()
-          : false;
+      final hasLocalData = await Storage.hasLocalWorkData();
+      final importDeviceData =
+          hasLocalData ? await _confirmDeviceDataImport() : false;
       if (!mounted) return;
 
       late final AuthSession session;
@@ -408,6 +447,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   username: username,
                   password: password,
                   displayName: displayName,
+                  inviteCode: inviteCode,
                 );
       } else {
         session = await ref.read(authSessionProvider.notifier).signInWithEmail(
@@ -547,8 +587,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     'Pay rules and work entries saved on this device will be removed. Other devices/server data are not affected.',
                   )
                 : _t(
-                    'Budget-Lee 공통 계정과 employeeee 근무기록, 급여 규칙, Budget-Lee 데이터가 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
-                    'Your shared Budget-Lee account, employeeee work entries, pay rules, and Budget-Lee data will be deleted. This cannot be undone.',
+                    'Budget-Lee 공통 계정과 eymployeee 근무기록, 급여 규칙, Budget-Lee 데이터가 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
+                    'Your shared Budget-Lee account, eymployeee work entries, pay rules, and Budget-Lee data will be deleted. This cannot be undone.',
                   ),
           ),
           actions: [
@@ -730,5 +770,15 @@ class _PlanRow extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return newValue.copyWith(text: newValue.text.toUpperCase());
   }
 }

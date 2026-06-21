@@ -877,7 +877,7 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
 
   Future<void> _exportBackup() async {
     final backup = await Storage.exportBackup();
-    await Share.share(backup, subject: 'employeeee backup');
+    await Share.share(backup, subject: 'eymployeee backup');
   }
 
   Future<void> _importBackup() async {

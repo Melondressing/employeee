@@ -608,7 +608,7 @@ class _HomeAppBarTitle extends StatelessWidget {
         child: Row(
           children: [
             Text(
-              'employeeee',
+              'eymployeee',
               style: TextStyle(
                 fontSize: isCompact ? 18 : 20,
                 fontWeight: FontWeight.w700,

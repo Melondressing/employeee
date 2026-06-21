@@ -153,7 +153,7 @@ class EmployeeCloudApi {
   Map<String, dynamic> _decodeResponse(http.Response response) {
     final decoded = jsonDecode(response.body);
     if (decoded is! Map<String, dynamic>) {
-      throw const AuthException('employeeee 클라우드 응답을 이해하지 못했어요.');
+      throw const AuthException('eymployeee 클라우드 응답을 이해하지 못했어요.');
     }
 
     final success = decoded['success'] == true;
@@ -161,7 +161,7 @@ class EmployeeCloudApi {
       throw AuthException(
         decoded['error']?.toString() ??
             decoded['message']?.toString() ??
-            'employeeee 클라우드 저장에 실패했어요.',
+            'eymployeee 클라우드 저장에 실패했어요.',
       );
     }
     return decoded;
